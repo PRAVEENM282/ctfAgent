@@ -1,0 +1,78 @@
+services:
+  ledger:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ledger
+      POSTGRES_USER: ledger
+      POSTGRES_PASSWORD: ledger
+    volumes:
+      - ledger-data:/var/lib/postgresql/data
+      - ./seeds:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:${API_PORT:-8080}:8080"
+    environment:
+      API_PORT: "8080"
+      DATABASE_URL: ${DATABASE_URL:-postgresql://ledger:ledger@ledger:5432/ledger}
+      CELESTO_PROVIDER: ${CELESTO_PROVIDER:-cloud}
+      CELESTO_BACKEND: ${CELESTO_BACKEND:-firecracker}
+      CELESTO_API_KEY: ${CELESTO_API_KEY:-replace-me}
+      LLM_PROVIDER: ${LLM_PROVIDER:-openai}
+      LLM_BASE_URL: ${LLM_BASE_URL:-https://api.openai.com/v1}
+      LLM_API_KEY: ${LLM_API_KEY:-replace-me}
+      LLM_MODEL: ${LLM_MODEL:-replace-with-a-model-name}
+      LLM_API_KEY_HEADER: ${LLM_API_KEY_HEADER:-}
+      LLM_API_KEY_PREFIX: ${LLM_API_KEY_PREFIX:-}
+      LLM_API_FORMAT: ${LLM_API_FORMAT:-}
+      LLM_TIMEOUT_SECONDS: ${LLM_TIMEOUT_SECONDS:-90}
+      BEDROCK_BASE_URL: ${BEDROCK_BASE_URL:-}
+      BEDROCK_API_KEY: ${BEDROCK_API_KEY:-}
+      BEDROCK_MODEL: ${BEDROCK_MODEL:-}
+      VULNFORGE_MAX_ITERATIONS: ${VULNFORGE_MAX_ITERATIONS:-20}
+      VULNFORGE_MAX_TOOL_CALLS: ${VULNFORGE_MAX_TOOL_CALLS:-40}
+      VULNFORGE_TOKEN_BUDGET: ${VULNFORGE_TOKEN_BUDGET:-16000}
+      VULNFORGE_REQUEST_MAX_TOKENS: ${VULNFORGE_REQUEST_MAX_TOKENS:-8192}
+      VULNFORGE_TIME_BUDGET_SECONDS: ${VULNFORGE_TIME_BUDGET_SECONDS:-600}
+      VULNFORGE_MAX_RETRIES: ${VULNFORGE_MAX_RETRIES:-2}
+      LLM_MAX_RETRIES: ${LLM_MAX_RETRIES:-2}
+      LLM_MAX_HTTP_ATTEMPTS: ${LLM_MAX_HTTP_ATTEMPTS:-8}
+      LLM_DAILY_REQUEST_LIMIT: ${LLM_DAILY_REQUEST_LIMIT:-1000}
+      LLM_DAILY_TOKEN_LIMIT: ${LLM_DAILY_TOKEN_LIMIT:-200000}
+      LLM_INPUT_RATE_USD_PER_MILLION: ${LLM_INPUT_RATE_USD_PER_MILLION:-0}
+      LLM_OUTPUT_RATE_USD_PER_MILLION: ${LLM_OUTPUT_RATE_USD_PER_MILLION:-0}
+      LLM_RATE_SOURCE: ${LLM_RATE_SOURCE:-configured_free_rate}
+      EVAL_BATCH_BUDGET_SECONDS: ${EVAL_BATCH_BUDGET_SECONDS:-5400}
+      VULNFORGE_STATE_DIR: /var/lib/vulnforge
+      OPERATOR_TOKEN: ${OPERATOR_TOKEN:-replace-me}
+      VULNFORGE_APPROVAL_MODE: ${VULNFORGE_APPROVAL_MODE:-interactive}
+      VULNFORGE_APPROVAL_TTL_SECONDS: ${VULNFORGE_APPROVAL_TTL_SECONDS:-300}
+      VULNFORGE_PUBLIC_LEASE_SECONDS: ${VULNFORGE_PUBLIC_LEASE_SECONDS:-900}
+      VULNFORGE_STARTUP_ACTION: ${VULNFORGE_STARTUP_ACTION:-none}
+      VULNFORGE_ACCOUNT_LIMIT_VERIFIED: ${VULNFORGE_ACCOUNT_LIMIT_VERIFIED:-0}
+    volumes:
+      - reports-data:/app/reports
+      - vulnforge-state:/var/lib/vulnforge
+    depends_on:
+      ledger:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+volumes:
+  ledger-data:
+  vulnforge-state:
+  reports-data:

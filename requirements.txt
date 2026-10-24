@@ -1,0 +1,11 @@
+# Runtime dependencies
+fastapi==0.158.1
+celesto==0.1.7
+httpx2==2.15.1
+jsonschema==4.26.0
+psycopg[binary]==3.3.6
+uvicorn==0.53.0
+
+# Development and verification tools
+pytest==9.1.1
+ruff==0.17.1
