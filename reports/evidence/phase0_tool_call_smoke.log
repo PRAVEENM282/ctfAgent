@@ -1,0 +1,9 @@
+INVENTORY_WARNING sdk_possibly_truncated=true returned=0 requested_limit=100
+CLEAN: no recorded orphaned cloud computers
+LLM_CALL 1/5 model_match=true prompt_tokens=76 completion_tokens=16 total_tokens=92
+LLM_CALL 2/5 model_match=true prompt_tokens=76 completion_tokens=16 total_tokens=92
+LLM_CALL 3/5 model_match=true prompt_tokens=76 completion_tokens=16 total_tokens=92
+LLM_CALL 4/5 model_match=true prompt_tokens=76 completion_tokens=16 total_tokens=92
+LLM_CALL 5/5 model_match=true prompt_tokens=76 completion_tokens=16 total_tokens=92
+LLM_TOTAL calls=5 model_match=true pinned_model=true prompt_tokens=380 completion_tokens=80 total_tokens=460
+PASS five_call_model_pin_smoke

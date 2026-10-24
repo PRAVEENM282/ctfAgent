@@ -1,0 +1,11 @@
+M5 live PostgreSQL verification status=BLOCKED timestamp=2026-10-22T18:05:42.385896Z
+
+The required Docker daemon is not available in this execution sandbox.
+
+$ docker ps --filter label=com.docker.compose.project=ctfagent-cleanboot-20261022
+Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?
+
+$ docker run --rm --network ctfagent-cleanboot-20261022_default --env DATABASE_URL=postgresql://ledger:ledger@ledger:5432/ledger --volume "$PWD:/work:ro" --workdir /work ctfagent-cleanboot-20261022-api python -m pytest -q -p no:cacheprovider tests/test_llm_budget_integration.py
+Not run: the named Docker network/container are not reachable from this sandbox.
+
+No PostgreSQL migration, reservation, header persistence, or cost result is claimed from this environment. Run the exact command above against the retained project after applying seeds/03_llm_budgets.sql.

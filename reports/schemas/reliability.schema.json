@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["run_count", "runs", "success_rate", "median_wall_clock_s", "p90_wall_clock_s", "median_boot_to_ready_s", "total_cost_usd", "postmortem_path"],
+  "properties": {
+    "run_count": {"type": "integer", "minimum": 20},
+    "runs": {
+      "type": "array",
+      "minItems": 20,
+      "items": {
+        "type": "object",
+        "required": ["sandbox_name", "fresh", "success", "wall_clock_s", "boot_to_ready_s", "cost_usd"],
+        "properties": {
+          "sandbox_name": {"type": "string", "pattern": "^sbx-[a-z0-9]{8,}$"},
+          "fresh": {"const": true},
+          "success": {"type": "boolean"},
+          "wall_clock_s": {"type": "number", "minimum": 0},
+          "boot_to_ready_s": {"type": "number", "minimum": 0},
+          "cost_usd": {"type": "number", "minimum": 0}
+        },
+        "additionalProperties": true
+      }
+    },
+    "success_rate": {"type": "number", "minimum": 0, "maximum": 1},
+    "median_wall_clock_s": {"type": "number", "minimum": 0},
+    "p90_wall_clock_s": {"type": "number", "minimum": 0},
+    "median_boot_to_ready_s": {"type": "number", "minimum": 0},
+    "total_cost_usd": {"type": "number", "minimum": 0},
+    "postmortem_path": {"const": "reports/postmortem.md"}
+  },
+  "additionalProperties": true
+}

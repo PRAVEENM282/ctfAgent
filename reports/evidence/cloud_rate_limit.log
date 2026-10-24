@@ -1,0 +1,8 @@
+2026-10-24 cloud create probe
+provider=celesto_cloud
+operation=computer.create
+status=429
+side_effects=none
+guest_allocated=false
+cleanup_required=false
+observation=the account rejected the create request before a guest was allocated; no sandbox was retained.

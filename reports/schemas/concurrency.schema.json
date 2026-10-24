@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "jobs",
+    "breakage_notes"
+  ],
+  "properties": {
+    "status": {
+      "enum": [
+        "tested",
+        "not_tested"
+      ]
+    },
+    "jobs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "sandbox_name",
+          "started_at"
+        ],
+        "properties": {
+          "sandbox_name": {
+            "type": "string",
+            "pattern": "^sbx-[a-z0-9]{8,}$"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "breakage_notes": {
+      "type": "string",
+      "minLength": 40
+    },
+    "observed_limit": {
+      "type": "string",
+      "minLength": 10
+    },
+    "evidence_path": {
+      "type": "string"
+    }
+  },
+  "anyOf": [
+    {
+      "properties": {
+        "jobs": {
+          "minItems": 5
+        }
+      },
+      "not": {
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "const": "not_tested"
+          }
+        }
+      }
+    },
+    {
+      "properties": {
+        "status": {
+          "const": "not_tested"
+        },
+        "jobs": {
+          "maxItems": 0
+        },
+        "observed_limit": {
+          "type": "string",
+          "minLength": 10
+        }
+      },
+      "required": [
+        "status",
+        "observed_limit"
+      ]
+    }
+  ],
+  "additionalProperties": true
+}

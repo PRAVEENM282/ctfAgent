@@ -1,0 +1,3 @@
+M9 sequential evaluation status=BLOCKED timestamp=2026-10-22T18:39:35.149772Z
+
+The evaluation runner refuses to start until DATABASE_URL and LLM credentials are available and account-specific provider request/token limits are verified. The runner will reserve the configured worst-case budget before a batch and will not synthesize 20 rows. No reliability metrics or total cost are claimed.

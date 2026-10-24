@@ -1,0 +1,13 @@
+source=stdout captured from the first real scripts/cloud_test_agent.py run before later cloud create probes were rate-limited
+execution_target=celesto_sandbox
+sandbox_name=sbx-8869dcc030b858b2
+computer_id=cmp_6cb48cf7fb55
+agent_model=deterministic_test_policy
+egress_status=blocked
+boot_to_ready_s=8.5061638090001
+generated_source_bytes=1041
+generated_source_sha256=a7f9e2fe3b6046b1c1801fd5e5ed2c39252187c08648db0f940a03cbc0d66657
+cleanup_confirmed=true
+wall_clock_s=55.68530276499996
+cost_usd=0.000232
+outcome=generated_source_and_cleanup_observed; later published-probe step returned HTTPError

@@ -1,0 +1,11 @@
+{
+  "cleanup_confirmed": false,
+  "cost_usd": 2.7e-05,
+  "error_type": "CloudAPIError",
+  "execution_target": "celesto_sandbox",
+  "provider_code": "http_429",
+  "provider_side_effects": "none",
+  "provider_status": 429,
+  "success": false,
+  "wall_clock_s": 6.536348265000015
+}

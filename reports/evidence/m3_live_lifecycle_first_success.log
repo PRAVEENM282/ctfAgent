@@ -1,0 +1,9 @@
+INVENTORY_WARNING sdk_possibly_truncated=true returned=0 requested_limit=100
+CLEAN: no recorded orphaned cloud computers
+CREATE_READY run_id=run-75ece48d54ba egress=blocked curl_exit=28 boot_to_ready_s=11.768
+PUBLISH_READY status=200 app_ready_s=5.958
+RESUME_READY same_computer_id=true status=200 stop_s=55.866 resume_s=32.115 app_ready_s=13.677
+LIFECYCLE_ACTIVE waiting_for_sigint=true
+DELETE_CONFIRMED computer_id=cmp_b32523f614ea duration_s=16.900 polls=1
+DELETE_LIFECYCLE_COMPLETE computer_id=cmp_b32523f614ea name=sbx-648871726295787e
+SIGINT_CLEANUP state=deleted error_code=interrupted celesto_cost_usd=0.000774 cost_method=computed_from_duration

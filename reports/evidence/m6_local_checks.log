@@ -1,0 +1,9 @@
+M6 local implementation verification timestamp=2026-10-22T18:39:35.149772Z
+
+$ python -m pytest -q tests/test_challenge.py tests/test_verification.py tests/test_publish.py tests/test_generator.py tests/test_celesto_adapter.py
+25 passed
+
+$ python -m ruff check src/challenge.py src/verification.py src/publish.py src/generator.py src/celesto_adapter.py src/agent tests/test_challenge.py tests/test_verification.py tests/test_publish.py tests/test_generator.py
+All checks passed.
+
+Coverage includes unique variation/flags, prompt redaction, fixed stdlib guardrails, trusted fixture fail-closed boundary, private negative/exploit comparison, publish-after-verifier, URL hash/lease metadata, revoke/delete order, and adapter command routing.

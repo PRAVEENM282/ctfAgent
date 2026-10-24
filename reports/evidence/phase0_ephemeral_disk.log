@@ -1,0 +1,21 @@
+INVENTORY_WARNING sdk_possibly_truncated=true returned=0 requested_limit=100
+CLEAN: no recorded orphaned cloud computers
+EPHEMERAL_COMPUTER_CREATED logical_name=sbx-7b80433e1ee0555b computer_id=cmp_10d23a1d5b38 boot_to_ready_s=7.970
+COMMAND_LOG {"command": "for path in /root /tmp /home/ohm; do if [ -d \"$path\" ]; then printf \"%s=present\\n\" \"$path\"; else printf \"%s=absent\\n\" \"$path\"; fi; done; id -u; printf \"HOME=%s\\n\" \"$HOME\"", "dispatched": true, "execution_target": "celesto_sandbox", "step": "path_inventory"}
+GUEST_COMMAND_RESULT step=path_inventory exit_code=0
+GUEST_IDENTITY uid=0 home=/root home_ohm_exists=true
+COMMAND_LOG {"command": "printf '%s' '4d778f5eefd736651fcd39a80bda2504' > /root/.phase0_disk_sentinel; printf '%s' '7a9138fed13eee1b22cf8f1d31b860da' > /tmp/.phase0_disk_sentinel; printf '%s' '35a828f602327d1788fcc81de7aa3786' > /home/ohm/.phase0_disk_sentinel", "dispatched": true, "execution_target": "celesto_sandbox", "step": "write_sentinels"}
+GUEST_COMMAND_RESULT step=write_sentinels exit_code=0
+EPHEMERAL_STOP_RESULT ok=true computer_id=cmp_10d23a1d5b38
+EPHEMERAL_RESUME_RESULT ok=true same_id=true
+COMMAND_LOG {"command": "printf 'root='; cat /root/.phase0_disk_sentinel; printf '\\ntmp='; cat /tmp/.phase0_disk_sentinel; printf '\\nhome_ohm='; if [ -d /home/ohm ]; then if [ -f /home/ohm/.phase0_disk_sentinel ]; then cat /home/ohm/.phase0_disk_sentinel; else printf 'missing'; fi; else printf 'directory_absent'; fi; printf '\\n'", "dispatched": true, "execution_target": "celesto_sandbox", "step": "read_sentinels"}
+GUEST_COMMAND_RESULT step=read_sentinels exit_code=0
+SENTINEL_RESULT path=root survived=true
+SENTINEL_RESULT path=tmp survived=true
+SENTINEL_RESULT path=home_ohm survived=true
+DELETE_REQUESTED computer_id=cmp_10d23a1d5b38
+INVENTORY_WARNING sdk_possibly_truncated=true returned=0 requested_limit=100
+ALREADY_ABSENT cmp_10d23a1d5b38
+CLEAN: no recorded orphaned cloud computers
+DELETE_CONFIRMED computer_id=cmp_10d23a1d5b38
+PASS ephemeral_disk_stop_resume_probe

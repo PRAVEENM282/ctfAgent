@@ -1,0 +1,7 @@
+INVENTORY_WARNING sdk_possibly_truncated=true returned=0 requested_limit=100
+CLEAN: no recorded orphaned cloud computers
+DELETE_CONFIRMED computer_id=cmp_2aed13b37f69 duration_s=7.454 polls=1
+DELETE_LIFECYCLE_COMPLETE computer_id=cmp_2aed13b37f69 name=sbx-f3f63844dd3009d6
+DELETE_CONFIRMED computer_id=cmp_e5a6bc7cfe84 duration_s=13.619 polls=1
+DELETE_LIFECYCLE_COMPLETE computer_id=cmp_e5a6bc7cfe84 name=sbx-6f4d17961ec75883
+M7_RESULT blocked=true m7_complete=true report_written=true

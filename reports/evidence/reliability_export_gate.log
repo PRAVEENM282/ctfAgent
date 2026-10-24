@@ -1,0 +1,5 @@
+The reliability exporter is intentionally evidence-gated.
+It reads ledger rows and three separately retained, structured supplemental rows with an observed wall_clock_s, boot_to_ready_s, cost, and unique sandbox name.
+The current observed count is 18, below the required 20, so it refuses to write reports/reliability.json.
+The latest direct cloud create attempts returned HTTP 429 with side_effects=none before guest allocation.
+No synthetic reliability rows were written.

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["who", "agent_work", "proof_output", "idea_source"],
+  "properties": {
+    "who": {"type": "string", "minLength": 40},
+    "agent_work": {"type": "string", "minLength": 40},
+    "proof_output": {"type": "string", "minLength": 20},
+    "idea_source": {"enum": ["idea_bank", "original"]}
+  },
+  "additionalProperties": true
+}

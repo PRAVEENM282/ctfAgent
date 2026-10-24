@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["failed_step", "total_steps", "policy", "rationale", "trace_path"],
+  "properties": {
+    "failed_step": {"const": 7},
+    "total_steps": {"const": 10},
+    "policy": {"enum": ["resume", "rollback", "fresh"]},
+    "rationale": {"type": "string", "minLength": 200},
+    "trace_path": {"const": "reports/failure_trace.jsonl"}
+  },
+  "additionalProperties": true
+}

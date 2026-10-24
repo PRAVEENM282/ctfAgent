@@ -1,0 +1,106 @@
+{
+  "ok": true,
+  "command": "doctor",
+  "exit_code": 0,
+  "data": {
+    "backend_requested": "firecracker",
+    "backend_resolved": "firecracker",
+    "system": "Linux",
+    "arch": "x86_64",
+    "checks": [
+      {
+        "name": "kvm",
+        "status": "pass",
+        "detail": "/dev/kvm is available",
+        "fix": null
+      },
+      {
+        "name": "firecracker",
+        "status": "pass",
+        "detail": "<HOME>/.celesto/bin/firecracker",
+        "fix": null
+      },
+      {
+        "name": "command:ip",
+        "status": "pass",
+        "detail": "/usr/sbin/ip",
+        "fix": null
+      },
+      {
+        "name": "command:nft",
+        "status": "pass",
+        "detail": "/usr/sbin/nft",
+        "fix": null
+      },
+      {
+        "name": "command:ssh",
+        "status": "pass",
+        "detail": "/usr/bin/ssh",
+        "fix": null
+      },
+      {
+        "name": "e2fsprogs",
+        "status": "pass",
+        "detail": "e2fsck and resize2fs found",
+        "fix": null
+      },
+      {
+        "name": "network-permissions",
+        "status": "pass",
+        "detail": "network commands and sudo policy are available",
+        "fix": null
+      },
+      {
+        "name": "nft-table:ip:celesto_nat",
+        "status": "warn",
+        "detail": "not created yet (will be created on first computer network setup)",
+        "fix": null
+      },
+      {
+        "name": "nft-table:inet:celesto_filter",
+        "status": "warn",
+        "detail": "not created yet (will be created on first computer network setup)",
+        "fix": null
+      },
+      {
+        "name": "worker:swap-disabled",
+        "status": "warn",
+        "detail": "Active (20257268 kB)",
+        "fix": "sudo swapoff -a"
+      },
+      {
+        "name": "worker:ksm-disabled",
+        "status": "pass",
+        "detail": "Disabled",
+        "fix": null
+      },
+      {
+        "name": "worker:thp-disabled",
+        "status": "warn",
+        "detail": "Active ('madvise')",
+        "fix": "sudo sh -c 'echo never > /sys/kernel/mm/transparent_hugepage/enabled'"
+      },
+      {
+        "name": "worker:kvm-nx-huge-pages",
+        "status": "pass",
+        "detail": "Mitigated ('n')",
+        "fix": null
+      },
+      {
+        "name": "worker:kvm-permissions",
+        "status": "pass",
+        "detail": "0o660 group=kvm",
+        "fix": null
+      }
+    ],
+    "summary": {
+      "failures": 0,
+      "warnings": 4,
+      "ok": true,
+      "strict": false
+    }
+  },
+  "error": null
+}
+
+DOCTOR_EXIT_CODE=0

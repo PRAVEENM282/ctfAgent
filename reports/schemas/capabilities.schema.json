@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["capabilities"],
+  "properties": {
+    "capabilities": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["id", "why", "evidence_path"],
+        "properties": {
+          "id": {
+            "enum": ["persistence", "snapshots", "celestofs", "browser", "published_ports", "network_policy", "safety_hooks", "host_mounts", "coding_agent_preset", "agentor_durable"]
+          },
+          "why": {"type": "string", "minLength": 80},
+          "evidence_path": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

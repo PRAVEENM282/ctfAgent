@@ -1,0 +1,3 @@
+M8 live fault-injection status=BLOCKED timestamp=2026-10-22T18:39:35.149772Z
+
+The FRESH coordinator, durable attempt context, live `scripts/run_recovery.py` entry point, and one-shot Step-7 injector are implemented and unit-tested. A real injected Celesto run, guest deletion, new guest retry, and interrupt evidence cannot be executed here because Docker/Celesto/LLM credentials are unavailable. No failure_trace.jsonl or interrupt_cleanup.txt is fabricated.

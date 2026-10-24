@@ -1,0 +1,19 @@
+INVENTORY_WARNING sdk_possibly_truncated=true returned=0 requested_limit=100
+CLEAN: no recorded orphaned cloud computers
+Celesto guest ready boot_to_ready_s=11.875
+network_policy_self_check status=blocked curl_exit_code=28 duration_ms=7957
+CREATE_READY run_id=run-4b04554349a3 egress=blocked curl_exit=28 boot_to_ready_s=11.875
+application ready after resume app_ready_s=2.540 status=200
+PUBLISH_READY status=200 app_ready_s=2.540
+Celesto guest stopped stop_s=17.745
+Celesto guest resumed resume_s=10.597
+application ready after resume app_ready_s=2.256 status=200
+RESUME_READY same_computer_id=true status=200 stop_s=17.745 resume_s=10.597 app_ready_s=2.256
+LIFECYCLE_ACTIVE waiting_for_sigint=true
+Celesto endpoint revoked revoke_s=8.317
+DELETE_CONFIRMED computer_id=cmp_4ce8afde420b duration_s=16.656 polls=1
+DELETE_LIFECYCLE_COMPLETE computer_id=cmp_4ce8afde420b name=sbx-94c93eed9f9b98cc
+Celesto guest deleted delete_s=16.656
+SIGINT_CLEANUP state=deleted error_code=interrupted celesto_duration_s=106.277 celesto_cost_usd=0.000443 cost_method=computed_from_duration
+LEDGER state=deleted transitions=created,ready,running,ready,running,deleted published_status=200 wall_clock_s=106.287 celesto_duration_s=106.277 celesto_cost_usd=0.000443 cost_method=computed_from_duration
+COMMAND_AUDIT count=3 origins=control_plane,control_plane,control_plane exit_codes=0,0,0 raw_output_logged=false raw_flag_pattern_found=false

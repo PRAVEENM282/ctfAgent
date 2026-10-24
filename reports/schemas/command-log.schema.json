@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["ts", "sandbox_name", "command", "decision", "execution_target"],
+  "properties": {
+    "ts": {"type": "string", "format": "date-time"},
+    "sandbox_name": {"type": "string", "pattern": "^sbx-[a-z0-9]{8,}$"},
+    "command": {"type": "string", "minLength": 1},
+    "decision": {"enum": ["allow", "block"]},
+    "execution_target": {"const": "celesto_sandbox"}
+  },
+  "additionalProperties": true
+}

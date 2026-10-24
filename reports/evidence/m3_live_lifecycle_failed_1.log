@@ -1,0 +1,5 @@
+INVENTORY_WARNING sdk_possibly_truncated=true returned=0 requested_limit=100
+CLEAN: no recorded orphaned cloud computers
+DELETE_CONFIRMED computer_id=cmp_469819f9e009 duration_s=11.136 polls=1
+DELETE_LIFECYCLE_COMPLETE computer_id=cmp_469819f9e009 name=sbx-98ee3ff2a693c118
+LIFECYCLE_FAILED error_type=NetworkPolicyViolation

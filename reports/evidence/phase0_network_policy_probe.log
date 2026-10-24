@@ -1,0 +1,26 @@
+INVENTORY_WARNING sdk_possibly_truncated=true returned=0 requested_limit=100
+CLEAN: no recorded orphaned cloud computers
+CREATE_REQUEST template_id=coding-agent network_policy=off experimental=true
+CREATE_RESPONSE status=403 request_id=unavailable
+CREATE_OUTCOME_REJECTED no_retry=true
+FAIL step=network_policy_probe error=ProbeError('lower-level create did not succeed; status=403') last_frame=<stdin>:249
+INVENTORY_WARNING sdk_possibly_truncated=true returned=0 requested_limit=100
+CLEAN: no recorded orphaned cloud computers
+CREATE_REQUEST template_id=coding-agent network_policy=off experimental_header=omitted
+CREATE_RESPONSE status=201 request_id=unavailable detail={"id":"cmp_396708a91ced","name":"curie","status":"creating","size_id":"micro","price_version":"usage-v2","vcpus":1,"ram_mb":2048,"disk_size_mb":20480,"image":"ubuntu-24.04","compute_location":{"provider":"ovh","region":"US-EAST-VA-1","country_code":"US"},"template_id":"coding-agent","template_version":null,"custom_template_id":null,"origin":"sdk","network_policy":{"mode":"off"},"external_volume_enabled":false,"connection":null,"published_ports":[],"metrics":null,"last_error":null,"created_at":"2
+COMPUTER_READY status=running polls=3
+CREATE_RESULT logical_name=sbx-226e6c5a19c87e38 computer_id=cmp_396708a91ced boot_to_ready_s=12.690 vcpus=1 ram_mb=2048 disk_size_mb=20480 size_id=micro price_version=usage-v2 template_id=coding-agent network_policy=off
+COMMAND_DISPATCH step=outbound_policy_check execution_target=celesto_sandbox
+GUEST_OUTBOUND_RESULT OUTBOUND_RESULT=blocked curl_exit=28
+OUTBOUND_POLICY_RESULT blocked=true
+COMMAND_DISPATCH step=start_python_http_server execution_target=celesto_sandbox
+GUEST_SERVER_RESULT started=true
+PUBLISH_RESULT port=8000 status=published url_shape=https://<route-label>.celesto.dev/ random_component=true
+INBOUND_RESULT status=200 marker_visible=true transport_error=none published_ports_verified=true
+REVOKE_CONFIRMED status=404 latency_s=6.893 polls=1
+REVOKE_RESULT status=404 latency_s=6.893 polls=1 verified=true
+DELETE_CONFIRMED computer_id=cmp_396708a91ced duration_s=13.124 polls=1
+DELETE_LIFECYCLE_COMPLETE computer_id=cmp_396708a91ced name=sbx-226e6c5a19c87e38
+DELETE_DURATION duration_s=13.124
+PROBE_GUEST_CLEANUP complete=true
+PASS network_policy_off_inbound_publish_probe

@@ -1,0 +1,22 @@
+{
+  "capabilities": [
+    {
+      "id": "persistence",
+      "status": "VERIFIED",
+      "why": "Same-ID stop/resume on an ephemeral Celesto guest preserved sentinels on its root disk, including /root; the DPR pause/resume persistence requirement is met without an external volume.",
+      "evidence_path": "reports/evidence/phase0_ephemeral_disk.log"
+    },
+    {
+      "id": "published_ports",
+      "status": "VERIFIED",
+      "why": "Phase 0 verified port 8000 publish, external HTTP 200, same-ID stop/resume with app restart and same-URL response, revoke to HTTP 404, and guest cleanup. The learner manager flow remains assigned to M6.",
+      "evidence_path": "reports/evidence/phase0_published_ports.log"
+    },
+    {
+      "id": "network_policy",
+      "status": "VERIFIED",
+      "why": "The normal project adapter set network_policy=off on pinned Celesto SDK 0.1.7 creates; the per-attempt curl self-check was blocked with exit 28 while a published inbound marker returned HTTP 200, and SIGINT cleanup confirmed revocation and deletion.",
+      "evidence_path": "reports/evidence/m3_live_lifecycle.log"
+    }
+  ]
+}
