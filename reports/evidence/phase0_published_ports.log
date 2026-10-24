@@ -1,0 +1,28 @@
+INVENTORY_WARNING sdk_possibly_truncated=true returned=0 requested_limit=100
+CLEAN: no recorded orphaned cloud computers
+PHASE0_COMPUTER_CREATED logical_name=sbx-f55535e43c204645 computer_id=cmp_6a958199ed07 requested_lifetime=ephemeral template_id=coding-agent boot_to_ready_s=11.435
+COMMAND_LOG {"command": "for tool in python3 python pip pip3 setsid busybox nc ncat socat php ruby perl curl wget apt-get apk; do command -v \"$tool\" 2>/dev/null || true; done; printf \"UID=%s\\n\" \"$(id -u)\"; if command -v python3 >/dev/null 2>&1; then python3 --version; python3 -m pip --version 2>&1 || printf \"PIP_RESULT unavailable\\n\"; python3 -c \"import sqlite3; print('SQLITE_VERSION='+sqlite3.sqlite_version)\"; else printf \"PYTHON3_RESULT unavailable\\n\"; fi; printf \"ROOT_DISK_BYTES=\"; df -B1 --output=size / | tail -n1; printf \"CPU_COUNT=\"; nproc; awk '/MemTotal/ {print \"MEMORY_KB=\" $2}' /proc/meminfo", "dispatched": true, "execution_target": "celesto_sandbox", "step": "runtime_inventory"}
+GUEST_COMMAND_RESULT step=runtime_inventory exit_code=0
+GUEST_RUNTIME_INVENTORY /opt/celesto/python/bin/python3,/opt/celesto/python/bin/python,/opt/celesto/python/bin/pip,/opt/celesto/python/bin/pip3,/usr/bin/setsid,/usr/bin/perl,/usr/bin/curl,/usr/bin/apt-get,UID=0,Python 3.12.15,pip 26.2.1 from /opt/celesto/python/lib/python3.12/site-packages/pip (python 3.12),SQLITE_VERSION=3.53.1,ROOT_DISK_BYTES=21047758848,CPU_COUNT=1,MEMORY_KB=2021228
+COMMAND_LOG {"command": "setsid python3 -c 'import http.server,socketserver; Handler=type('\"'\"'Handler'\"'\"',(http.server.BaseHTTPRequestHandler,),{'\"'\"'do_GET'\"'\"':lambda self:(self.send_response(200),self.send_header('\"'\"'Content-Type'\"'\"','\"'\"'text/plain'\"'\"'),self.end_headers(),self.wfile.write(b'\"'\"'phase0-publication-ok'\"'\"')),'\"'\"'log_message'\"'\"':lambda self,*args:None}); Server=type('\"'\"'Server'\"'\"',(socketserver.TCPServer,),{'\"'\"'allow_reuse_address'\"'\"':True}); Server(('\"'\"'0.0.0.0'\"'\"',8000),Handler).serve_forever()' >/dev/null 2>&1 </dev/null &", "dispatched": true, "execution_target": "celesto_sandbox", "step": "start_python_http_server"}
+GUEST_COMMAND_RESULT step=start_python_http_server exit_code=0
+SERVER_SETUP_RESULT ready=true
+PUBLISH_RESULT port=8000 status=published url_present=true
+PUBLISHED_PORTS_RESULT count=1 requested_port_listed=true status=published url_matches=true
+HTTP_PROBE label=published_url status=200 marker_visible=true transport_error=none attempts=1
+HTTP_PROBE label=without_url_component:route_host_removed status=301 marker_visible=false transport_error=none attempts=1
+HOST_ROUTING_RESULT host_routing_observed=true method=route_host_removed status=301 marker_visible=false transport_error=none
+COMPUTER_STOP_RESULT ok=true computer_id=cmp_6a958199ed07
+COMPUTER_RESUME_RESULT ok=true same_id=true stop_succeeded=true
+COMMAND_LOG {"command": "setsid python3 -c 'import http.server,socketserver; Handler=type('\"'\"'Handler'\"'\"',(http.server.BaseHTTPRequestHandler,),{'\"'\"'do_GET'\"'\"':lambda self:(self.send_response(200),self.send_header('\"'\"'Content-Type'\"'\"','\"'\"'text/plain'\"'\"'),self.end_headers(),self.wfile.write(b'\"'\"'phase0-publication-ok'\"'\"')),'\"'\"'log_message'\"'\"':lambda self,*args:None}); Server=type('\"'\"'Server'\"'\"',(socketserver.TCPServer,),{'\"'\"'allow_reuse_address'\"'\"':True}); Server(('\"'\"'0.0.0.0'\"'\"',8000),Handler).serve_forever()' >/dev/null 2>&1 </dev/null &", "dispatched": true, "execution_target": "celesto_sandbox", "step": "start_python_http_server"}
+GUEST_COMMAND_RESULT step=start_python_http_server exit_code=0
+APP_RESTART_AFTER_RESUME_RESULT ready=true
+COMPUTER_RESUME_PORT_RESULT listed=true url_matches=true
+HTTP_PROBE label=after_computer_resume status=200 marker_visible=true transport_error=none attempts=1
+UNPUBLISH_RESULT port=8000 status=unpublishing requested=true
+UNPUBLISH_LIST_RESULT port_listed=false attempts=6
+HTTP_PROBE label=after_revoke status=404 marker_visible=false transport_error=none attempts=1
+POST_REVOKE_RESULT inaccessible=true marker_visible=false
+DELETE_CONFIRMED computer_id=cmp_6a958199ed07 duration_s=6.395 polls=1
+DELETE_LIFECYCLE_COMPLETE computer_id=cmp_6a958199ed07 name=sbx-f55535e43c204645
+PASS published_ports_stop_resume_probe

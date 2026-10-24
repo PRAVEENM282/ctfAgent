@@ -1,0 +1,131 @@
+VulnForge fresh-clone boot audit started 2026-10-23T05:36:11Z
++ git clone --no-hardlinks /home/friday/Documents/hackathon/ctfAgent /tmp/vulnforge-fresh.vjlF5j/repo
+Cloning into '/tmp/vulnforge-fresh.vjlF5j/repo'...
+done.
++ git -C /tmp/vulnforge-fresh.vjlF5j/repo status --short --branch
+## codex/m7-m5-completion-visible...origin/codex/m7-m5-completion-visible
++ docker compose --project-directory /tmp/vulnforge-fresh.vjlF5j/repo -p vf-fresh-1792733771 --env-file /tmp/vulnforge-fresh.vjlF5j/repo/.env.example down -v --remove-orphans
+time="2026-10-23T11:06:11+05:30" level=warning msg="Warning: No resource found to remove for project \"vf-fresh-1792733771\"."
++ env API_PORT=18081 docker compose --project-directory /tmp/vulnforge-fresh.vjlF5j/repo -p vf-fresh-1792733771 --env-file /tmp/vulnforge-fresh.vjlF5j/repo/.env.example up --build --wait -d
+ Image vf-fresh-1792733771-api Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 528B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 833B done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/python:3.11-slim
+#3 DONE 0.0s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 2B done
+#4 DONE 0.0s
+
+#5 [ 1/11] FROM docker.io/library/python:3.11-slim@sha256:b7a9e5f6a93d6d4a31f129bbd4bdee69efccb6ded0fb230d78aafaf37af98377
+#5 resolve docker.io/library/python:3.11-slim@sha256:b7a9e5f6a93d6d4a31f129bbd4bdee69efccb6ded0fb230d78aafaf37af98377 0.0s done
+#5 DONE 0.0s
+
+#6 [internal] load build context
+#6 transferring context: 531.69kB 0.0s done
+#6 DONE 0.0s
+
+#7 [ 4/11] COPY requirements.txt ./requirements.txt
+#7 CACHED
+
+#8 [ 2/11] WORKDIR /app
+#8 CACHED
+
+#9 [ 3/11] RUN apt-get update     && apt-get install --no-install-recommends -y curl     && rm -rf /var/lib/apt/lists/*
+#9 CACHED
+
+#10 [ 5/11] RUN pip install --no-cache-dir -r requirements.txt
+#10 CACHED
+
+#11 [ 6/11] RUN useradd --create-home --uid 10001 vulnforge     && install -d -o vulnforge -g vulnforge /var/lib/vulnforge
+#11 CACHED
+
+#12 [ 7/11] COPY --chown=vulnforge:vulnforge src ./src
+#12 DONE 0.1s
+
+#13 [ 8/11] COPY --chown=vulnforge:vulnforge tests ./tests
+#13 DONE 0.0s
+
+#14 [ 9/11] COPY --chown=vulnforge:vulnforge scripts ./scripts
+#14 DONE 0.1s
+
+#15 [10/11] COPY --chown=vulnforge:vulnforge reports ./reports
+#15 DONE 0.1s
+
+#16 [11/11] COPY --chown=vulnforge:vulnforge seeds ./seeds
+#16 DONE 0.1s
+
+#17 exporting to image
+#17 exporting layers
+#17 exporting layers 0.2s done
+#17 exporting manifest sha256:4a4dd249562b9ef99ad3a61a92707fbcd20196240410ea0ee837b7b1cd673010 0.0s done
+#17 exporting config sha256:50bbbcaac42d89258585f56df8276aaebcb634e678cfcf658b08560017de2a8c 0.0s done
+#17 exporting attestation manifest sha256:39ff1bbffc1011d3be6241c2789efbc880ec2bab040d0cef0c579dfdd8a674e8 0.0s done
+#17 exporting manifest list sha256:452825e6c323fd754a1345f8164152db654258d894b1689cbe623fcde539b3ec 0.0s done
+#17 naming to docker.io/library/vf-fresh-1792733771-api:latest done
+#17 unpacking to docker.io/library/vf-fresh-1792733771-api:latest 0.1s done
+#17 DONE 0.3s
+
+#18 resolving provenance for metadata file
+#18 DONE 0.0s
+ Image vf-fresh-1792733771-api Built 
+ Volume vf-fresh-1792733771_reports-data Creating 
+ Network vf-fresh-1792733771_default Creating 
+ Volume vf-fresh-1792733771_reports-data Creating 
+ Network vf-fresh-1792733771_default Creating 
+ Volume vf-fresh-1792733771_vulnforge-state Creating 
+ Volume vf-fresh-1792733771_vulnforge-state Creating 
+ Volume vf-fresh-1792733771_ledger-data Creating 
+ Volume vf-fresh-1792733771_ledger-data Creating 
+ Volume vf-fresh-1792733771_reports-data Created 
+ Volume vf-fresh-1792733771_reports-data Created 
+ Volume vf-fresh-1792733771_vulnforge-state Created 
+ Volume vf-fresh-1792733771_vulnforge-state Created 
+ Volume vf-fresh-1792733771_ledger-data Created 
+ Volume vf-fresh-1792733771_ledger-data Created 
+ Network vf-fresh-1792733771_default Created 
+ Network vf-fresh-1792733771_default Created 
+ Container vf-fresh-1792733771-ledger-1 Creating 
+ Container vf-fresh-1792733771-ledger-1 Created 
+ Container vf-fresh-1792733771-api-1 Creating 
+ Container vf-fresh-1792733771-api-1 Created 
+ Container vf-fresh-1792733771-ledger-1 Starting 
+ Container vf-fresh-1792733771-ledger-1 Started 
+ Container vf-fresh-1792733771-ledger-1 Waiting 
+ Container vf-fresh-1792733771-ledger-1 Healthy 
+ Container vf-fresh-1792733771-api-1 Starting 
+ Container vf-fresh-1792733771-api-1 Started 
+ Container vf-fresh-1792733771-api-1 Waiting 
+ Container vf-fresh-1792733771-ledger-1 Waiting 
+ Container vf-fresh-1792733771-ledger-1 Healthy 
+ Container vf-fresh-1792733771-api-1 Healthy 
+compose_elapsed_seconds=12
+CHECK health
+{"status":"ok"}PASS check=health
+CHECK health_db
+{"status":"ok"}PASS check=health_db
+CHECK seed
+[{"run_id":"run-seed00000001","attempt_id":null,"parent_run_id":null,"batch_id":null,"sandbox_name":"sbx-seeddemo1","problem_id":"ctf-seed-validation","state":"deleted","execution_target":"celesto_sandbox","created_at":"2026-10-23T05:36:15.218639Z","updated_at":"2026-10-23T05:36:15.218639Z","variation_seed":null,"source_revision":null,"spec_revision":null,"error_code":null,"wall_clock_s":null,"boot_to_ready_s":null,"app_ready_s":null,"published_url_probe_status":null,"token_input":null,"token_output":null,"llm_cost_usd":null,"celesto_duration_s":null,"celesto_cost_usd":null,"celesto_cost_method":null,"total_cost_usd":null,"llm_cost_method":null,"llm_provider":null,"llm_model":null,"llm_rate_source":null}]PASS check=seed
+./scripts/audit_fresh_boot.sh: line 75: python: command not found
+ Container vf-fresh-1792733771-api-1 Stopping 
+ Container vf-fresh-1792733771-api-1 Stopped 
+ Container vf-fresh-1792733771-api-1 Removing 
+ Container vf-fresh-1792733771-api-1 Removed 
+ Container vf-fresh-1792733771-ledger-1 Stopping 
+ Container vf-fresh-1792733771-ledger-1 Stopped 
+ Container vf-fresh-1792733771-ledger-1 Removing 
+ Container vf-fresh-1792733771-ledger-1 Removed 
+ Volume vf-fresh-1792733771_ledger-data Removing 
+ Volume vf-fresh-1792733771_vulnforge-state Removing 
+ Volume vf-fresh-1792733771_reports-data Removing 
+ Network vf-fresh-1792733771_default Removing 
+ Volume vf-fresh-1792733771_ledger-data Removed 
+ Volume vf-fresh-1792733771_reports-data Removed 
+ Volume vf-fresh-1792733771_vulnforge-state Removed 
+ Network vf-fresh-1792733771_default Removed 

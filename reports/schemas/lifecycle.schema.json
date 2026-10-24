@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["cleanup_on_success", "cleanup_on_failure", "cleanup_on_interrupt", "sandbox_names"],
+  "properties": {
+    "cleanup_on_success": {"const": true},
+    "cleanup_on_failure": {"const": true},
+    "cleanup_on_interrupt": {"const": true},
+    "sandbox_names": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^sbx-[a-z0-9]{8,}$"}
+    }
+  },
+  "additionalProperties": true
+}

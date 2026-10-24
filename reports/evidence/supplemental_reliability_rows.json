@@ -1,0 +1,34 @@
+[
+  {
+    "sandbox_name": "sbx-testpolicy018a33b4a1a8",
+    "fresh": true,
+    "success": true,
+    "wall_clock_s": 20.456360105000385,
+    "boot_to_ready_s": 9.841203107000183,
+    "cost_usd": 0.000085,
+    "scope": "deterministic_test_policy_real_cloud_guest",
+    "source_evidence_path": "reports/evidence/cloud_reliability_batch.json"
+  },
+  {
+    "sandbox_name": "sbx-8869dcc030b858b2",
+    "fresh": true,
+    "success": false,
+    "wall_clock_s": 55.68530276499996,
+    "boot_to_ready_s": 8.5061638090001,
+    "cost_usd": 0.000232,
+    "scope": "deterministic_test_policy_generated_guest",
+    "error_code": "HTTPError",
+    "source_evidence_path": "reports/evidence/cloud_test_agent_generated_guest.log"
+  },
+  {
+    "sandbox_name": "sbx-94c93eed9f9b98cc",
+    "fresh": true,
+    "success": false,
+    "wall_clock_s": 106.287,
+    "boot_to_ready_s": 11.875,
+    "cost_usd": 0.000443,
+    "scope": "lifecycle_publish_resume_interrupt",
+    "error_code": "interrupted",
+    "source_evidence_path": "reports/evidence/m3_live_lifecycle.log"
+  }
+]

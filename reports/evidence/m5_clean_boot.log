@@ -1,0 +1,116 @@
+$ docker compose -p ctfagent-cleanboot-20261022 --env-file .env.example down -v
+ Container ctfagent-cleanboot-20261022-api-1 Stopping 
+ Container ctfagent-cleanboot-20261022-api-1 Stopped 
+ Container ctfagent-cleanboot-20261022-api-1 Removing 
+ Container ctfagent-cleanboot-20261022-api-1 Removed 
+ Container ctfagent-cleanboot-20261022-ledger-1 Stopping 
+ Container ctfagent-cleanboot-20261022-ledger-1 Stopped 
+ Container ctfagent-cleanboot-20261022-ledger-1 Removing 
+ Container ctfagent-cleanboot-20261022-ledger-1 Removed 
+ Volume ctfagent-cleanboot-20261022_vulnforge-state Removing 
+ Network ctfagent-cleanboot-20261022_default Removing 
+ Volume ctfagent-cleanboot-20261022_vulnforge-state Removed 
+ Volume ctfagent-cleanboot-20261022_ledger-data Removing 
+ Volume ctfagent-cleanboot-20261022_ledger-data Removed 
+ Network ctfagent-cleanboot-20261022_default Removed 
+$ API_PORT=18080 docker compose -p ctfagent-cleanboot-20261022 --env-file .env.example up --build -d --wait
+ Image ctfagent-cleanboot-20261022-api Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 590B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 786B done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/python:3.11-slim
+#3 DONE 1.3s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 2B done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 56.08kB done
+#5 DONE 0.0s
+
+#6 [ 1/10] FROM docker.io/library/python:3.11-slim@sha256:cce12316475d7d56d605f76e1d811d0dc4e7227f2d4afd29951521264f504ff8
+#6 resolve docker.io/library/python:3.11-slim@sha256:cce12316475d7d56d605f76e1d811d0dc4e7227f2d4afd29951521264f504ff8 0.0s done
+#6 DONE 0.0s
+
+#7 [ 5/10] RUN pip install --no-cache-dir -r requirements.txt
+#7 CACHED
+
+#8 [ 3/10] RUN apt-get update     && apt-get install --no-install-recommends -y curl     && rm -rf /var/lib/apt/lists/*
+#8 CACHED
+
+#9 [ 4/10] COPY requirements.txt ./requirements.txt
+#9 CACHED
+
+#10 [ 6/10] RUN useradd --create-home --uid 10001 vulnforge     && install -d -o vulnforge -g vulnforge /var/lib/vulnforge
+#10 CACHED
+
+#11 [ 2/10] WORKDIR /app
+#11 CACHED
+
+#12 [ 7/10] COPY --chown=vulnforge:vulnforge src ./src
+#12 CACHED
+
+#13 [ 8/10] COPY --chown=vulnforge:vulnforge scripts ./scripts
+#13 DONE 0.1s
+
+#14 [ 9/10] COPY --chown=vulnforge:vulnforge reports ./reports
+#14 DONE 0.1s
+
+#15 [10/10] COPY --chown=vulnforge:vulnforge seeds ./seeds
+#15 DONE 0.1s
+
+#16 exporting to image
+#16 exporting layers 0.1s done
+#16 exporting manifest sha256:629513cfcf03f910f72607f0d83284f1932597d25586d45ed5a77bb08c0fc6fa 0.0s done
+#16 exporting config sha256:b9cd3a60e08856277b5f7a12c00670cf0b4c55cc0816b727ab1554b616815bd3 0.0s done
+#16 exporting attestation manifest sha256:51f045790772d8df13c92065b0521c880322fe777135960190aeb807888b3051 0.0s done
+#16 exporting manifest list sha256:aa71d52b720ad207059a915b3ebc24bbdf4380304dcacafd4dcc2c60c17ce2cc 0.0s done
+#16 naming to docker.io/library/ctfagent-cleanboot-20261022-api:latest done
+#16 unpacking to docker.io/library/ctfagent-cleanboot-20261022-api:latest 0.1s done
+#16 DONE 0.3s
+
+#17 resolving provenance for metadata file
+#17 DONE 0.0s
+ Image ctfagent-cleanboot-20261022-api Built 
+ Volume ctfagent-cleanboot-20261022_vulnforge-state Creating 
+ Volume ctfagent-cleanboot-20261022_vulnforge-state Creating 
+ Volume ctfagent-cleanboot-20261022_ledger-data Creating 
+ Volume ctfagent-cleanboot-20261022_ledger-data Creating 
+ Network ctfagent-cleanboot-20261022_default Creating 
+ Network ctfagent-cleanboot-20261022_default Creating 
+ Volume ctfagent-cleanboot-20261022_vulnforge-state Created 
+ Volume ctfagent-cleanboot-20261022_vulnforge-state Created 
+ Volume ctfagent-cleanboot-20261022_ledger-data Created 
+ Volume ctfagent-cleanboot-20261022_ledger-data Created 
+ Network ctfagent-cleanboot-20261022_default Created 
+ Network ctfagent-cleanboot-20261022_default Created 
+ Container ctfagent-cleanboot-20261022-ledger-1 Creating 
+ Container ctfagent-cleanboot-20261022-ledger-1 Created 
+ Container ctfagent-cleanboot-20261022-api-1 Creating 
+ Container ctfagent-cleanboot-20261022-api-1 Created 
+ Container ctfagent-cleanboot-20261022-ledger-1 Starting 
+ Container ctfagent-cleanboot-20261022-ledger-1 Started 
+ Container ctfagent-cleanboot-20261022-ledger-1 Waiting 
+ Container ctfagent-cleanboot-20261022-ledger-1 Healthy 
+ Container ctfagent-cleanboot-20261022-api-1 Starting 
+ Container ctfagent-cleanboot-20261022-api-1 Started 
+ Container ctfagent-cleanboot-20261022-api-1 Waiting 
+ Container ctfagent-cleanboot-20261022-ledger-1 Waiting 
+ Container ctfagent-cleanboot-20261022-ledger-1 Healthy 
+ Container ctfagent-cleanboot-20261022-api-1 Healthy 
+$ docker compose -p ctfagent-cleanboot-20261022 --env-file .env.example cp tests/test_ledger_integration.py api:/tmp/test_ledger_integration.py
+ ctfagent-cleanboot-20261022-api-1 Copying tests/test_ledger_integration.py to ctfagent-cleanboot-20261022-api-1:/tmp/test_ledger_integration.py
+ ctfagent-cleanboot-20261022-api-1 Copied tests/test_ledger_integration.py to ctfagent-cleanboot-20261022-api-1:/tmp/test_ledger_integration.py
+$ docker compose -p ctfagent-cleanboot-20261022 --env-file .env.example exec -T api python -m pytest -q /tmp/test_ledger_integration.py
+..                                                                       [100%]
+2 passed in 0.42s
+$ docker compose -p ctfagent-cleanboot-20261022 --env-file .env.example ps
+NAME                                   IMAGE                             COMMAND                  SERVICE   CREATED          STATUS                    PORTS
+ctfagent-cleanboot-20261022-api-1      ctfagent-cleanboot-20261022-api   "uvicorn src.api.mai…"   api       11 seconds ago   Up 6 seconds (healthy)    0.0.0.0:18080->8080/tcp, [::]:18080->8080/tcp
+ctfagent-cleanboot-20261022-ledger-1   postgres:16-alpine                "docker-entrypoint.s…"   ledger    11 seconds ago   Up 11 seconds (healthy)   5432/tcp

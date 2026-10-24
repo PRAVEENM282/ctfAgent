@@ -1,0 +1,108 @@
+=== celesto doctor ===
+Celesto may send limited local usage counts (installation ID, feature category, version, OS family). PostHog may derive your approximate location (such as country or city) from your IP address and may retain that address. No commands, files, or URLs are sent. See https://celesto.ai/legal/privacy-policy. Opt out: celesto config telemetry off or CELESTO_NO_TELEMETRY=1.
+╭────────────────────── Error ───────────────────────╮
+│ Error: [Errno 2] No such file or directory: 'sudo' │
+╰────────────────────────────────────────────────────╯
+DOCTOR_EXIT_CODE=1
+
+=== celesto computer create --help ===
+Usage: celesto computer create [OPTIONS]
+
+  Create a minimal computer; add --desktop for a Linux desktop.
+
+Options:
+  --desktop                       Create a Linux desktop computer instead of a
+                                  minimal one.
+  --local                         Use your machine (the default).
+  --cloud                         Use Celesto Cloud.
+  -n, --name TEXT                 Name for the computer.
+  --os [alpine|ubuntu|windows|macos]
+                                  Operating system image; auto-detected when
+                                  omitted.
+  --image TEXT                    S3 URI or local qcow2 image path.
+  --memory MIB
+  --disk-size MIB
+  --width INTEGER
+  --height INTEGER
+  --backend [auto|firecracker|qemu|libkrun|vz]
+                                  Virtualization backend.
+  --qemu-machine [auto|q35|microvm]
+                                  QEMU machine model.  [default: auto]
+  --comm-channel [ssh|vsock]      How Celesto sends commands to the computer.
+  --mount LOCAL_PATH[:COMPUTER_PATH]
+                                  Share a folder from your machine; repeat to
+                                  share more than one.
+  --writable-mounts               Allow the computer to change shared folders.
+  --clipboard / --no-clipboard    Copy and paste between this Mac and the
+                                  macOS desktop (on by default). Use --no-
+                                  clipboard to keep the two clipboards
+                                  separate.
+  --yes                           Confirm one-time macOS image preparation.
+  --network [nat|bridge]          Network mode: 'nat' (default, private
+                                  network) or 'bridge' (join a network bridge
+                                  on your machine).
+  --bridge BRIDGE                 Linux bridge to attach to (required with
+                                  --network bridge).
+  --boot-timeout FLOAT            Seconds to wait for the computer to be
+                                  ready.  [default: 30.0]
+  --json                          Output a JSON envelope.
+  -h, --help                      Show this message and exit.
+
+=== SDK cloud create request model (installed celesto 0.1.7) ===
+MODEL ComputerCreateRequest fields=size_id, vcpus, ram_mb, disk_size_mb, image, template_id, template_version, network_policy, external_volume_enabled, additional_properties
+Request to create a new compute VM.
+
+Attributes:
+    size_id (None | str | Unset): Named sandbox size
+    vcpus (int | None | Unset): Number of virtual CPUs
+    ram_mb (int | None | Unset): RAM in megabytes
+    disk_size_mb (int | None | Unset): Disk size in megabytes (20 GB maximum)
+    image (str | Unset):  Default: 'ubuntu-desktop-24.04'.
+    template_id (None | str | Unset): Sandbox template id, e.g. scratch or coding-agent
+    template_version (None | str | Unset): Optional immutable template version; latest if omitted
+    network_policy (NetworkPolicy | Unset): Outbound internet access, fixed for the lifetime of a computer.
+    external_volume_enabled (bool | Unset): Attach a persistent external volume at /home/ohm that survives
+        stop/restore. Off by default (the sandbox is otherwise ephemeral); cannot be changed after create. Default:
+        False.
+MODEL ComputerPublishedPortCreateRequest fields=port, force, additional_properties
+Request to publish a sandbox port to the internet.
+
+Attributes:
+    port (int | Unset): HTTP application port; Celesto system ports are reserved Default: 8000.
+    force (bool | Unset): Compatibility flag; publish requests already reapply active host routes Default: False.
+MODEL ComputerPublishedPortResponse fields=computer_id, port, status, id, url, created_at, additional_properties
+Public route for a port inside a computer.
+
+Attributes:
+    computer_id (str):
+    port (int):
+    status (str):
+    id (None | str | Unset):
+    url (None | str | Unset):
+    created_at (None | str | Unset):
+MODEL NetworkPolicy fields=mode
+Outbound internet access, fixed for the lifetime of a computer.
+
+Attributes:
+    mode (NetworkPolicyMode | Unset):  Default: NetworkPolicyMode.OPEN.
+=== installed 0.1.7 cloud feature model details ===
+NetworkPolicyMode values=OFF,OPEN
+NetworkPolicy fields=mode
+ComputerBrowserConnectionResponse fields=gateway_url,token,expires_at,additional_properties
+Computer.browser signature=(self) -> 'BrowserConnection'
+Computer.browser doc=None
+ComputerPublishedPortCreateRequest fields=port,force,additional_properties
+ComputerPublishedPortResponse fields=computer_id,port,status,id,url,created_at,additional_properties
+Computer.browser public signature=(self) -> 'BrowserConnection'
+Computer.browser public doc=Return a CDP WebSocket URL for Playwright; request again to refresh it.
+=== constructor vs cloud request ===
+Computer constructor=(*, provider: 'ProviderName | None' = None, local: 'bool | None' = None, lifetime: "Literal['ephemeral', 'persistent']" = 'ephemeral', **options: 'Any') -> 'None'
+CloudProvider constructor=(*, api_key: 'str | None' = None, base_url: 'str' = 'https://api.celesto.ai', organization_id: 'str | None' = None, startup_timeout: 'float' = 120, cleanup_timeout: 'float' = 120, vcpus: 'int | None' = None, ram_mb: 'int | None' = None, disk_size_mb: 'int | None' = None, image: 'str' = 'ubuntu-desktop-24.04', template_id: 'str | None' = None, template_version: 'str | None' = None, external_volume_enabled: 'bool' = False) -> 'None'
+Computer lifetime is a wrapper lifecycle flag; CloudProvider constructor has no lifetime parameter.
+CloudProvider request model includes size_id and network_policy, but CloudProvider constructor does not expose either.
+CloudProvider constructor does expose external_volume_enabled, vcpus, ram_mb, disk_size_mb, image, template_id, template_version.
+NetworkPolicyMode serialized_values=OFF:off,OPEN:open
+SDK_CONSTRUCTOR_RESULT option=persistent_home supported_by_installed_0.1.7=false error_type=TypeError
+SDK_CONSTRUCTOR_RESULT option=network_policy supported_by_installed_0.1.7=false error_type=TypeError
+SDK_CONSTRUCTOR_RESULT option=size_id supported_by_installed_0.1.7=false error_type=TypeError
+SDK_CONSTRUCTOR_CHECK_SCOPE start_called=false cloud_create_request_sent=false

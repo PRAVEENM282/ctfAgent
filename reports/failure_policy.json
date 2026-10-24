@@ -1,0 +1,7 @@
+{
+  "failed_step": 7,
+  "total_steps": 10,
+  "policy": "fresh",
+  "rationale": "A failed Step-7 verifier attempt is preserved as its own ledger row and evidence snapshot, then the guest is deleted before a new guest is created. Resume is not used because a failed generated application may leave unknown processes or state. Infrastructure failures reuse the same source revision; generated-code or verifier defects require a new source revision. This keeps retries bounded, auditable, and separate from the successful learner pause/resume capability.",
+  "trace_path": "reports/failure_trace.jsonl"
+}

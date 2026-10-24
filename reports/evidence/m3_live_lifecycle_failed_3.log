@@ -1,0 +1,6 @@
+INVENTORY_WARNING sdk_possibly_truncated=true returned=0 requested_limit=100
+CLEAN: no recorded orphaned cloud computers
+CREATE_READY run_id=run-14bed252198a egress=blocked curl_exit=28 boot_to_ready_s=65.630
+DELETE_CONFIRMED computer_id=cmp_ec74003aa5e3 duration_s=13.072 polls=1
+DELETE_LIFECYCLE_COMPLETE computer_id=cmp_ec74003aa5e3 name=sbx-ccaf9e4772f1233b
+LIFECYCLE_FAILED error_type=RuntimeError

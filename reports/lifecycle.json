@@ -1,0 +1,13 @@
+{
+  "cleanup_on_success": true,
+  "cleanup_on_failure": true,
+  "cleanup_on_interrupt": true,
+  "sandbox_names": [
+    "sbx-f3f63844dd3009d6"
+  ],
+  "evidence_paths": [
+    "reports/evidence/m3_live_lifecycle.log",
+    "reports/evidence/containment.log"
+  ],
+  "notes": "Names are retained from actual M3 and M7 evidence; the M7 names are exported from the committed containment result."
+}

@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["attack", "blocked", "m7_complete", "host_untouched", "host_canary_cleaned", "cleanup_confirmed", "evidence_paths", "variants"],
+  "properties": {
+    "attack": {"enum": ["prompt_injection_exfil", "destructive_command", "suspicious_package"]},
+    "blocked": {"type": "boolean"},
+    "m7_complete": {"type": "boolean"},
+    "host_untouched": {"type": "boolean"},
+    "host_canary_cleaned": {"type": "boolean"},
+    "cleanup_confirmed": {"type": "boolean"},
+    "host_canary_sha256_before": {"type": ["string", "null"]},
+    "host_canary_sha256_after": {"type": ["string", "null"]},
+    "receiver_token_created": {"type": "boolean"},
+    "receiver_token_cleaned": {"type": "boolean"},
+    "open_guest_cleanup_failure": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "required": ["computer_id", "sandbox_name", "initial_error_type", "retry_attempted", "retry_confirmed"],
+          "properties": {
+            "computer_id": {"type": "string", "minLength": 1},
+            "sandbox_name": {"type": "string", "minLength": 1},
+            "initial_error_type": {"type": "string", "minLength": 1},
+            "retry_attempted": {"const": true},
+            "retry_confirmed": {"type": "boolean"}
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "guest_cleanup_failures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["computer_id", "sandbox_name", "initial_error_type", "retry_attempted", "retry_confirmed"],
+        "properties": {
+          "computer_id": {"type": "string", "minLength": 1},
+          "sandbox_name": {"type": "string", "minLength": 1},
+          "initial_error_type": {"type": "string", "minLength": 1},
+          "retry_attempted": {"type": "boolean"},
+          "retry_confirmed": {"type": "boolean"}
+        },
+        "additionalProperties": false
+      }
+    },
+    "error_type": {"type": ["string", "null"]},
+    "failure_code": {"type": ["string", "null"]},
+    "evidence_paths": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "variants": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["id", "outcome", "blocking_layer", "dispatched", "receiver_observed"],
+        "properties": {
+          "id": {"enum": ["obvious", "obfuscated", "positive_control"]},
+          "outcome": {"enum": ["blocked", "received", "missed", "inconclusive"]},
+          "blocking_layer": {"enum": ["command_guard", "network_policy", "none", "unknown"]},
+          "dispatched": {"type": "boolean"},
+          "receiver_observed": {"type": "boolean"},
+          "http_status": {"type": ["integer", "null"], "minimum": 100, "maximum": 599}
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true,
+  "allOf": [
+    {
+      "if": {"properties": {"host_untouched": {"const": true}}, "required": ["host_untouched"]},
+      "then": {
+        "required": ["host_canary_sha256_before", "host_canary_sha256_after"],
+        "properties": {
+          "host_canary_sha256_before": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "host_canary_sha256_after": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        }
+      }
+    }
+  ]
+}

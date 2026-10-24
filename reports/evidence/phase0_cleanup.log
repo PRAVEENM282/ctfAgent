@@ -1,0 +1,18 @@
+Cleanup evidence is limited to project-created echo guests; no untracked account guest was deleted.
+
+Earlier complete probe: reports/evidence/phase0_persistence.log records DELETE_REQUESTED
+and DELETE_CONFIRMED for cmp_71ee9a9161cc. A later targeted Computer.get lookup for that
+deleted ID returned VMNotFoundError.
+
+Latest echo attempt: cmp_7995025de713 ran the guarded echo and Computer.delete returned.
+The command capture ended after DELETE_REQUESTED; a separate targeted Computer.get lookup
+returned VMNotFoundError, confirming that ID was absent. The separate lookup output was:
+TARGETED_DELETE_CHECK=absent via VMNotFoundError
+
+The fresh account list showed zero rows, but SDK 0.1.7 marked the list possibly truncated.
+That list is not treated as proof that no untracked account computers exist.
+
+Updated reaper integration run: cmp_f696dfe0900d completed the guarded echo, then was
+deleted. The reaper's tracked-ID lookup printed ALREADY_ABSENT after the targeted
+Computer.get raised VMNotFoundError, then printed DELETE_CONFIRMED and PASS
+sdk_echo_and_delete. Full output: reports/evidence/phase0_echo.log.

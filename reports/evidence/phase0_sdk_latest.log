@@ -1,0 +1,14 @@
+LATEST_PYPI_INSTALLED_VERSION 0.1.7
+SDK_SIGNATURE Computer(*, provider: 'ProviderName | None' = None, local: 'bool | None' = None, lifetime: "Literal['ephemeral', 'persistent']" = 'ephemeral', **options: 'Any') -> 'None'
+SDK_SIGNATURE CloudProvider(*, api_key: 'str | None' = None, base_url: 'str' = 'https://api.celesto.ai', organization_id: 'str | None' = None, startup_timeout: 'float' = 120, cleanup_timeout: 'float' = 120, vcpus: 'int | None' = None, ram_mb: 'int | None' = None, disk_size_mb: 'int | None' = None, image: 'str' = 'ubuntu-desktop-24.04', template_id: 'str | None' = None, template_version: 'str | None' = None, external_volume_enabled: 'bool' = False) -> 'None'
+CLOUD_OPTIONS api_key,base_url,organization_id,startup_timeout,cleanup_timeout,vcpus,ram_mb,disk_size_mb,image,template_id,template_version,external_volume_enabled
+CREATE_REQUEST_FIELDS size_id,vcpus,ram_mb,disk_size_mb,image,template_id,template_version,network_policy,external_volume_enabled,additional_properties
+LIFETIME_WRAPPER_ONLY true
+SDK_OPTION option=persistent_home accepted=false error=TypeError
+SDK_OPTION option=network_policy accepted=false error=TypeError
+SDK_OPTION option=size_id accepted=false error=TypeError
+WARNING: pip index is currently an experimental command. It may be removed/changed in a future release without prior warning.
+celesto (0.1.7)
+Available versions: 0.1.7, 0.1.6, 0.1.5, 0.1.4, 0.1.3.post1, 0.1.3, 0.1.2.260926, 0.1.2, 0.1.1, 0.1.0, 0.0.14, 0.0.13, 0.0.12, 0.0.11, 0.0.10, 0.0.9, 0.0.8, 0.0.7, 0.0.6, 0.0.5, 0.0.4, 0.0.3, 0.0.2, 0.0.1
+  INSTALLED: 0.1.7
+  LATEST:    0.1.7

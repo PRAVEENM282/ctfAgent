@@ -1,0 +1,6 @@
+{
+  "who": "Cybersecurity learners and instructors who need short-lived, repeatable vulnerable labs without exposing host files or control-plane secrets.",
+  "agent_work": "The agent generates a bounded stdlib SQL-injection challenge in a fresh Celesto computer, verifies it privately, publishes only the target port, and cleans it up.",
+  "proof_output": "A private exact-flag comparison, an external HTTP probe, a revocation result, and an independently confirmed guest deletion record.",
+  "idea_source": "original"
+}

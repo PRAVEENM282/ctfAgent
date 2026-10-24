@@ -1,0 +1,7 @@
+{
+  "status": "not_tested",
+  "jobs": [],
+  "breakage_notes": "Five concurrent jobs were not started: the real cloud create probe returned HTTP 429 before allocating a guest, so no concurrency claim is made and no sandbox was left running.",
+  "observed_limit": "cloud create rate limit returned HTTP 429 before guest allocation",
+  "evidence_path": "reports/evidence/cloud_rate_limit.log"
+}

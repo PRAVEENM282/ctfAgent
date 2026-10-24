@@ -1,0 +1,12 @@
+2026-10-24T03:35:18Z
+workspace_pytest=152_passed_3_skipped
+ruff=passed
+report_validation_non_strict=passed
+celesto_cloud_inventory=empty_after_cleanup
+compose_host_check=passed_from_operator_terminal
+compose_health=HTTP_200
+ledger_seed=sbx-seeddemo1_present
+ledger_valid_post=HTTP_201
+ledger_host_target_rejection=HTTP_400
+strict_report_validation=blocked_only_by_missing_reports/reliability.json
+strict_reliability_reason=18_observed_rows; cloud_create_probe_HTTP_429_before_guest_allocation; exporter_refuses_synthetic_rows

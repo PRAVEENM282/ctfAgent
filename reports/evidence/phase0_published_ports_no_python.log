@@ -1,0 +1,20 @@
+INVENTORY_WARNING sdk_possibly_truncated=true returned=0 requested_limit=100
+CLEAN: no recorded orphaned cloud computers
+EPHEMERAL_COMPUTER_CREATED logical_name=sbx-6fee9a17cebb6a73 computer_id=cmp_68855cd76a5e
+COMMAND_LOG {"command": "for tool in python3 python busybox nc ncat socat php ruby perl curl wget apt-get apk; do command -v \"$tool\" 2>/dev/null || true; done; id -u", "dispatched": true, "execution_target": "celesto_sandbox", "step": "runtime_inventory"}
+GUEST_COMMAND_RESULT step=runtime_inventory exit_code=0
+GUEST_RUNTIME_INVENTORY /usr/bin/perl,/usr/bin/curl,/usr/bin/apt-get,0
+SERVER_SETUP_RESULT ready=false reason=python3_unavailable
+PUBLISH_RESULT port=8000 status=published url_present=true
+PUBLISHED_PORTS_RESULT count=1 requested_port_listed=true status=published url_matches=true
+HTTP_PROBE status=not_run reason=guest_http_server_unavailable
+EPHEMERAL_STOP_RESULT ok=true computer_id=cmp_68855cd76a5e
+EPHEMERAL_RESUME_RESULT ok=true same_id=true stop_succeeded=true
+EPHEMERAL_RESUME_PORT_RESULT listed=true url_matches=true
+UNPUBLISH_RESULT port=8000 requested=true
+UNPUBLISH_LIST_RESULT port_listed=true
+DELETE_REQUESTED computer_id=cmp_68855cd76a5e
+INVENTORY_WARNING sdk_possibly_truncated=true returned=0 requested_limit=100
+ALREADY_ABSENT cmp_68855cd76a5e
+CLEAN: no recorded orphaned cloud computers
+DELETE_CONFIRMED computer_id=cmp_68855cd76a5e

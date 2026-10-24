@@ -1,0 +1,21 @@
+INVENTORY_WARNING sdk_possibly_truncated=true returned=1 requested_limit=100
+TRACKED_INVENTORY computer_id=cmp_58c92d843448 status=deleting
+WOULD_DELETE sbx-eaefb167edfcc1ce (cmp_58c92d843448)
+INVENTORY_WARNING sdk_possibly_truncated=true returned=1 requested_limit=100
+TRACKED_INVENTORY computer_id=cmp_58c92d843448 status=deleting
+FAIL step=reap_orphans error=RuntimeError('delete managed computer cmp_58c92d843448: exit=1; code=\'runtime_error\'; message="Cloud get request failed (ReadTimeout); its outcome may be unknown. Inspect computer \'cmp_58c92d843448\' in the cloud dashboard; retry once, then contact support."') last_frame=/app/scripts/reap_orphans.py:52
+INVENTORY_WARNING sdk_possibly_truncated=true returned=1 requested_limit=100
+TRACKED_INVENTORY computer_id=cmp_58c92d843448 status=deleting
+WOULD_DELETE sbx-eaefb167edfcc1ce (cmp_58c92d843448)
+TARGETED_LOOKUP_RESULT computer_id=cmp_58c92d843448 absent=false
+REGISTRY_CHECK computer_id=cmp_58c92d843448 tracked=true
+TARGETED_STATUS computer_id=cmp_58c92d843448 status=deleting
+INVENTORY_WARNING sdk_possibly_truncated=true returned=1 requested_limit=100
+TRACKED_INVENTORY computer_id=cmp_58c92d843448 status=deleting
+WOULD_DELETE sbx-eaefb167edfcc1ce (cmp_58c92d843448)
+INVENTORY_WARNING sdk_possibly_truncated=true returned=0 requested_limit=100
+ALREADY_ABSENT cmp_58c92d843448
+CLEAN: no recorded orphaned cloud computers
+INVENTORY_WARNING sdk_possibly_truncated=true returned=0 requested_limit=100
+ALREADY_ABSENT cmp_58c92d843448
+CLEAN: no recorded orphaned cloud computers

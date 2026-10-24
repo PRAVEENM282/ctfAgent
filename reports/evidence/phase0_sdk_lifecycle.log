@@ -1,0 +1,23 @@
+INVENTORY_WARNING sdk_possibly_truncated=true returned=0 requested_limit=100
+CLEAN: no recorded orphaned cloud computers
+CELESTO_SDK_VERSION 0.1.7
+SDK_SIGNATURE Computer(*, provider: 'ProviderName | None' = None, local: 'bool | None' = None, lifetime: "Literal['ephemeral', 'persistent']" = 'ephemeral', **options: 'Any') -> 'None'
+SDK_SIGNATURE Computer.get(computer_id: 'str', *, provider: 'ProviderName | None' = None, local: 'bool | None' = None, data_dir: 'Path | None' = None, **options: 'Any') -> 'Self'
+SDK_SIGNATURE Computer.start(self) -> 'Self'
+SDK_SIGNATURE Computer.run(self, command: 'str', timeout: 'int' = 30) -> 'CommandResult'
+SDK_SIGNATURE Computer.stop(self) -> 'Self'
+SDK_SIGNATURE Computer.resume(self) -> 'Self'
+SDK_SIGNATURE Computer.publish_port(self, port: 'int') -> 'PublishedPort'
+SDK_SIGNATURE Computer.published_ports(self) -> 'list[PublishedPort]'
+SDK_SIGNATURE Computer.unpublish_port(self, port: 'int') -> 'PublishedPort'
+SDK_SIGNATURE Computer.delete(self) -> 'None'
+COMPUTER_CREATED logical_name=sbx-bd785a728f8d786a computer_id=cmp_7b8c2b59e977
+COMMAND_LOG {"command": "echo hi", "dispatched": true, "execution_target": "celesto_sandbox", "step": "sdk_echo"}
+GUEST_COMMAND_RESULT step=sdk_echo exit_code=0
+ECHO_RESULT stdout=hi exit_code=0
+DELETE_REQUESTED computer_id=cmp_7b8c2b59e977
+INVENTORY_WARNING sdk_possibly_truncated=true returned=0 requested_limit=100
+ALREADY_ABSENT cmp_7b8c2b59e977
+CLEAN: no recorded orphaned cloud computers
+DELETE_CONFIRMED computer_id=cmp_7b8c2b59e977
+PASS sdk_echo_and_delete

@@ -1,0 +1,163 @@
+ Container ctfagent-api-1 Stopping
+ Container ctfagent-api-1 Stopped
+ Container ctfagent-api-1 Removing
+ Container ctfagent-api-1 Removed
+ Container ctfagent-ledger-1 Stopping
+ Container ctfagent-ledger-1 Stopped
+ Container ctfagent-ledger-1 Removing
+ Container ctfagent-ledger-1 Removed
+ Volume ctfagent_ledger-data Removing
+ Network ctfagent_default Removing
+ Volume ctfagent_ledger-data Removed
+ Network ctfagent_default Removed
+ Image ctfagent-api Building
+#1 [internal] load local bake definitions
+#1 reading from stdin 524B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 721B done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/python:3.11-slim
+#3 DONE 4.2s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 2B done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 2.68kB done
+#5 DONE 0.0s
+
+#6 [ 1/10] FROM docker.io/library/python:3.11-slim@sha256:cce12316475d7d56d605f76e1d811d0dc4e7227f2d4afd29951521264f504ff8
+#6 resolve docker.io/library/python:3.11-slim@sha256:cce12316475d7d56d605f76e1d811d0dc4e7227f2d4afd29951521264f504ff8 0.0s done
+#6 DONE 0.0s
+
+#7 [ 7/10] COPY --chown=vulnforge:vulnforge src ./src
+#7 CACHED
+
+#8 [ 3/10] RUN apt-get update     && apt-get install --no-install-recommends -y curl     && rm -rf /var/lib/apt/lists/*
+#8 CACHED
+
+#9 [ 5/10] RUN pip install --no-cache-dir -r requirements.txt
+#9 CACHED
+
+#10 [ 2/10] WORKDIR /app
+#10 CACHED
+
+#11 [ 4/10] COPY requirements.txt ./requirements.txt
+#11 CACHED
+
+#12 [ 6/10] RUN useradd --create-home --uid 10001 vulnforge
+#12 CACHED
+
+#13 [ 8/10] COPY --chown=vulnforge:vulnforge scripts ./scripts
+#13 CACHED
+
+#14 [ 9/10] COPY --chown=vulnforge:vulnforge reports ./reports
+#14 DONE 0.0s
+
+#15 [10/10] COPY --chown=vulnforge:vulnforge seeds ./seeds
+#15 DONE 0.0s
+
+#16 exporting to image
+#16 exporting layers 0.1s done
+#16 exporting manifest sha256:87ba0d18d12aae8cf480a3980568f9a688800c78bc65f57d039c3ef1275e3fc6 done
+#16 exporting config sha256:b9cf2a28043fd9791e014387d25cb4d3f22bd956f77e35a3db924cdb4423f578 0.0s done
+#16 exporting attestation manifest sha256:650f84fc80e6b31b7feff36d79a29e407575851de8a05e983e41d1b5f03a0736 0.0s done
+#16 exporting manifest list sha256:d910498914994c872a828c18dbabee57f8d098f69e16c39c40d58660699d918d
+#16 exporting manifest list sha256:d910498914994c872a828c18dbabee57f8d098f69e16c39c40d58660699d918d done
+#16 naming to docker.io/library/ctfagent-api:latest done
+#16 unpacking to docker.io/library/ctfagent-api:latest 0.0s done
+#16 DONE 0.2s
+
+#17 resolving provenance for metadata file
+#17 DONE 0.0s
+ Image ctfagent-api Built
+ Network ctfagent_default Creating
+ Network ctfagent_default Creating
+ Volume ctfagent_ledger-data Creating
+ Volume ctfagent_ledger-data Creating
+ Volume ctfagent_ledger-data Created
+ Volume ctfagent_ledger-data Created
+ Network ctfagent_default Created
+ Network ctfagent_default Created
+ Container ctfagent-ledger-1 Creating
+ Container ctfagent-ledger-1 Created
+ Container ctfagent-api-1 Creating
+ Container ctfagent-api-1 Created
+ Container ctfagent-ledger-1 Starting
+ Container ctfagent-ledger-1 Started
+ Container ctfagent-ledger-1 Waiting
+ Container ctfagent-ledger-1 Healthy
+ Container ctfagent-api-1 Starting
+ Container ctfagent-api-1 Started
+=== Compose status ===
+NAME                IMAGE                COMMAND                  SERVICE   CREATED          STATUS                    PORTS
+ctfagent-api-1      ctfagent-api         "uvicorn src.api.mai…"   api       18 seconds ago   Up 13 seconds (healthy)   0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp
+ctfagent-ledger-1   postgres:16-alpine   "docker-entrypoint.s…"   ledger    19 seconds ago   Up 18 seconds (healthy)   5432/tcp
+=== GET /health ===
+{"status":"ok"}
+HTTP 200
+=== GET /health/db ===
+{"status":"ok"}
+HTTP 200
+=== GET /api/runs ===
+[{"run_id":"run-seed00000001","attempt_id":null,"parent_run_id":null,"batch_id":null,"sandbox_name":"sbx-seeddemo1","problem_id":"ctf-seed-validation","state":"deleted","execution_target":"celesto_sandbox","created_at":"2026-10-22T07:29:20.533005Z","updated_at":"2026-10-22T07:29:20.533005Z","variation_seed":null,"source_revision":null,"spec_revision":null,"error_code":null,"wall_clock_s":null,"boot_to_ready_s":null,"app_ready_s":null,"published_url_probe_status":null,"token_input":null,"token_output":null,"llm_cost_usd":null,"celesto_cost_usd":null,"total_cost_usd":null}]
+HTTP 200
+=== Live PostgreSQL API contract test ===
+ Container ctfagent-api-run-04aa8ce789b5 Creating
+ Container ctfagent-api-run-04aa8ce789b5 Created
+============================= test session starts ==============================
+platform linux -- Python 3.11.17, pytest-9.1.1, pluggy-1.7.0 -- /usr/local/bin/python
+rootdir: /app
+plugins: anyio-4.15.1
+collecting ... collected 1 item
+
+tests/test_ledger_integration.py::test_run_api_contract_against_postgres PASSED [100%]
+
+============================== 1 passed in 0.38s ===============================
+=== Ledger rows after integration-test cleanup ===
+run-seed00000001|sbx-seeddemo1
+=== Seed row count ===
+1
+=== Final live PostgreSQL integration run ===
+ Container ctfagent-api-run-1c1d4e267f10 Creating
+ Container ctfagent-api-run-1c1d4e267f10 Created
+============================= test session starts ==============================
+platform linux -- Python 3.11.17, pytest-9.1.1, pluggy-1.7.0 -- /usr/local/bin/python
+rootdir: /app
+plugins: anyio-4.15.1
+collecting ... collected 1 item
+
+tests/test_ledger_integration.py::test_run_api_contract_against_postgres PASSED [100%]
+
+============================== 1 passed in 0.40s ===============================
+=== Seed count after cleanup ===
+1
+=== Stop ledger for outage check ===
+ Container ctfagent-ledger-1 Stopping
+ Container ctfagent-ledger-1 Stopped
+=== Liveness during database outage ===
+{"status":"ok"}
+HTTP 200
+=== Database health during database outage ===
+{"error":{"code":"ledger_unavailable","message":"ledger is unavailable"}}
+HTTP 503
+=== Restart ledger after outage check ===
+ Container ctfagent-ledger-1 Starting
+ Container ctfagent-ledger-1 Started
+=== PostgreSQL ready after restart ===
+/var/run/postgresql:5432 - accepting connections
+=== Database health after recovery ===
+{"status":"ok"}
+HTTP 200
+=== Compose services after recovery ===
+NAME                IMAGE                COMMAND                  SERVICE   CREATED         STATUS                                     PORTS
+ctfagent-api-1      ctfagent-api         "uvicorn src.api.mai…"   api       2 minutes ago   Up 2 minutes (healthy)                     0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp
+ctfagent-ledger-1   postgres:16-alpine   "docker-entrypoint.s…"   ledger    2 minutes ago   Up Less than a second (health: starting)   5432/tcp
+=== Compose services after recovery ===
+NAME                IMAGE                COMMAND                  SERVICE   CREATED         STATUS                    PORTS
+ctfagent-api-1      ctfagent-api         "uvicorn src.api.mai…"   api       2 minutes ago   Up 2 minutes (healthy)    0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp
+ctfagent-ledger-1   postgres:16-alpine   "docker-entrypoint.s…"   ledger    2 minutes ago   Up 18 seconds (healthy)   5432/tcp

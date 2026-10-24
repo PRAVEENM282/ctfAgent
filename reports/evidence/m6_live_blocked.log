@@ -1,0 +1,5 @@
+M6 live generation/verifier/publication status=BLOCKED timestamp=2026-10-22T18:39:35.149772Z
+
+The current execution sandbox has no Docker daemon, no CELESTO_API_KEY, no LLM_API_KEY, and no retained Postgres container. The installed Celesto 0.1.7 public Computer API exposes no verified file-upload method, so trusted flag seeding fails closed rather than putting the flag in a command string.
+
+No live generated source, flag match, public URL, cost, or cleanup result is claimed.

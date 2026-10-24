@@ -1,0 +1,45 @@
+INVENTORY_WARNING sdk_possibly_truncated=true returned=0 requested_limit=100
+CLEAN: no recorded orphaned cloud computers
+CELESTO_SDK_VERSION 0.1.7
+SDK_SIGNATURE Computer(*, provider: 'ProviderName | None' = None, local: 'bool | None' = None, lifetime: "Literal['ephemeral', 'persistent']" = 'ephemeral', **options: 'Any') -> 'None'
+SDK_SIGNATURE Computer.get(computer_id: 'str', *, provider: 'ProviderName | None' = None, local: 'bool | None' = None, data_dir: 'Path | None' = None, **options: 'Any') -> 'Self'
+SDK_SIGNATURE Computer.start(self) -> 'Self'
+SDK_SIGNATURE Computer.run(self, command: 'str', timeout: 'int' = 30) -> 'CommandResult'
+SDK_SIGNATURE Computer.stop(self) -> 'Self'
+SDK_SIGNATURE Computer.resume(self) -> 'Self'
+SDK_SIGNATURE Computer.publish_port(self, port: 'int') -> 'PublishedPort'
+SDK_SIGNATURE Computer.published_ports(self) -> 'list[PublishedPort]'
+SDK_SIGNATURE Computer.unpublish_port(self, port: 'int') -> 'PublishedPort'
+SDK_SIGNATURE Computer.delete(self) -> 'None'
+COMPUTER_CREATED logical_name=sbx-ee26ddd6011e03c5 computer_id=cmp_71ee9a9161cc
+COMMAND_LOG {"command": "echo hi", "dispatched": true, "execution_target": "celesto_sandbox", "step": "sdk_echo"}
+GUEST_COMMAND_RESULT step=sdk_echo exit_code=0
+ECHO_RESULT stdout=hi exit_code=0
+DELETE_REQUESTED computer_id=cmp_71ee9a9161cc
+INVENTORY_WARNING sdk_possibly_truncated=true returned=0 requested_limit=100
+ALREADY_ABSENT cmp_71ee9a9161cc
+CLEAN: no recorded orphaned cloud computers
+DELETE_CONFIRMED computer_id=cmp_71ee9a9161cc
+PASS sdk_echo_and_delete
+INVENTORY_WARNING sdk_possibly_truncated=true returned=0 requested_limit=100
+CLEAN: no recorded orphaned cloud computers
+FAIL step=persistence_probe error=CloudAPIError('Cloud API returned HTTP 422. Check the operation parameters and retry; contact Celesto support if they are valid. Request ID: 944fbfb99e8663deb3e7f9a7d7758a83.') provider_context={"code": "validation_error", "operation": "create", "side_effects": "none", "status_code": 422, "validation_errors": []} last_frame=/usr/local/lib/python3.11/site-packages/celesto/_cloud.py:208
+
+=== BISECT lifetime-only ===
+INVENTORY_WARNING sdk_possibly_truncated=true returned=0 requested_limit=100
+CLEAN: no recorded orphaned cloud computers
+CREATE_CASE lifetime-only kwargs={"lifetime": "persistent", "provider": "cloud"}
+CREATE_ACCEPTED case=lifetime-only logical_name=sbx-ff69b5866da3c947 computer_id=cmp_c3788b7a0e6b
+DELETE_REQUESTED case=lifetime-only computer_id=cmp_c3788b7a0e6b
+INVENTORY_WARNING sdk_possibly_truncated=true returned=0 requested_limit=100
+ALREADY_ABSENT cmp_c3788b7a0e6b
+CLEAN: no recorded orphaned cloud computers
+DELETE_CONFIRMED case=lifetime-only computer_id=cmp_c3788b7a0e6b
+PASS create-and-delete case=lifetime-only
+
+=== BISECT volume-only ===
+INVENTORY_WARNING sdk_possibly_truncated=true returned=0 requested_limit=100
+CLEAN: no recorded orphaned cloud computers
+CREATE_CASE volume-only kwargs={"external_volume_enabled": true, "provider": "cloud"}
+CREATE_REJECTED case=volume-only error=CloudAPIError('Cloud API returned HTTP 422. Check the operation parameters and retry; contact Celesto support if they are valid. Request ID: 4d4d2c9b68b3d20ed6a4f075887c058b.') provider_context={"code": "validation_error", "operation": "create", "side_effects": "none", "status_code": 422, "validation_errors": []}
+FAIL case=volume-only last_frame=/usr/local/lib/python3.11/site-packages/celesto/_cloud.py:208

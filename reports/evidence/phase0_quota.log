@@ -1,0 +1,11 @@
+Cloud inventory request: computer list --cloud --json --limit 100
+Observed rows: 0
+SDK inventory flag: possibly_truncated=true (the SDK can set this on an empty result)
+Project echo guests: created and deleted sequentially; targeted lookup returned VMNotFoundError
+Persistent create: HTTP 422, side_effects=none; no guest allocated
+Rate limit: NOT ESTABLISHED
+Retained-computer/account quota: NOT ESTABLISHED
+Trial start date: NOT OBSERVED; dashboard confirmation required
+Concurrency: NOT TESTED; max-inflight was constrained to 1
+
+This is not evidence of the account's full inventory or actual quota boundary.

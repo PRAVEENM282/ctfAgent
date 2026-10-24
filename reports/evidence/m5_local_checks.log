@@ -1,0 +1,14 @@
+M5 local verification timestamp=2026-10-22T18:05:42.385896Z
+
+$ python -m pytest -q tests/test_llm_client.py tests/test_agent_loop.py tests/test_llm_budget_integration.py
+.....s                                                                   [100%]
+5 passed, 1 skipped in 0.06s
+
+$ python -m ruff check src/agent src/ledger/repository.py tests/test_llm_client.py tests/test_agent_loop.py tests/test_llm_budget_integration.py
+All checks passed!
+
+$ docker-compose --env-file .env.example config
+valid; services api and ledger rendered
+
+$ python scripts/secret_scan.py
+Secret scan passed.

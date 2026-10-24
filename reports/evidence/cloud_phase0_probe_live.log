@@ -1,0 +1,23 @@
+FAIL step=persistence_probe error=CloudAPIError('Cloud API returned HTTP 422. Check the operation parameters and retry; contact Celesto support if they are valid. Request ID: 0613fb01639586a8d3ce45991f77defd.') provider_context={"code": "validation_error", "operation": "create", "side_effects": "none", "status_code": 422, "validation_errors": []} last_frame=/usr/local/lib/python3.11/dist-packages/celesto/_cloud.py:208
+INVENTORY_WARNING sdk_possibly_truncated=true returned=0 requested_limit=100
+CLEAN: no recorded orphaned cloud computers
+CELESTO_SDK_VERSION 0.1.7
+SDK_SIGNATURE Computer(*, provider: 'ProviderName | None' = None, local: 'bool | None' = None, lifetime: "Literal['ephemeral', 'persistent']" = 'ephemeral', **options: 'Any') -> 'None'
+SDK_SIGNATURE Computer.get(computer_id: 'str', *, provider: 'ProviderName | None' = None, local: 'bool | None' = None, data_dir: 'Path | None' = None, **options: 'Any') -> 'Self'
+SDK_SIGNATURE Computer.start(self) -> 'Self'
+SDK_SIGNATURE Computer.run(self, command: 'str', timeout: 'int' = 30) -> 'CommandResult'
+SDK_SIGNATURE Computer.stop(self) -> 'Self'
+SDK_SIGNATURE Computer.resume(self) -> 'Self'
+SDK_SIGNATURE Computer.publish_port(self, port: 'int') -> 'PublishedPort'
+SDK_SIGNATURE Computer.published_ports(self) -> 'list[PublishedPort]'
+SDK_SIGNATURE Computer.unpublish_port(self, port: 'int') -> 'PublishedPort'
+SDK_SIGNATURE Computer.delete(self) -> 'None'
+COMPUTER_CREATED logical_name=sbx-ed459b89d344ae59 computer_id=cmp_db50164bfc28
+COMMAND_LOG {"command": "echo hi", "dispatched": true, "execution_target": "celesto_sandbox", "step": "sdk_echo"}
+GUEST_COMMAND_RESULT step=sdk_echo exit_code=0
+ECHO_RESULT stdout=hi exit_code=0
+DELETE_CONFIRMED computer_id=cmp_db50164bfc28 duration_s=4.985 polls=1
+DELETE_LIFECYCLE_COMPLETE computer_id=cmp_db50164bfc28 name=sbx-ed459b89d344ae59
+PASS sdk_echo_and_delete
+INVENTORY_WARNING sdk_possibly_truncated=true returned=0 requested_limit=100
+CLEAN: no recorded orphaned cloud computers

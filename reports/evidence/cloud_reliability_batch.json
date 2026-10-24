@@ -1,0 +1,17 @@
+[
+  {
+    "sandbox_name": "sbx-testpolicy018a33b4a1a8",
+    "fresh": true,
+    "success": true,
+    "wall_clock_s": 20.456360105000385,
+    "boot_to_ready_s": 9.841203107000183,
+    "cost_usd": 8.5e-05,
+    "model_mode": "deterministic_test_policy",
+    "execution_scope": "real_cloud_guest_benign_command",
+    "cleanup_confirmed": true,
+    "error_type": null,
+    "provider_status": null,
+    "provider_code": null,
+    "provider_side_effects": null
+  }
+]

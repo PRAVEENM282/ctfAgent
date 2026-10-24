@@ -1,0 +1,9 @@
+INVENTORY_WARNING sdk_possibly_truncated=true returned=0 requested_limit=100
+CLEAN: no recorded orphaned cloud computers
+TEMPLATE_COMPUTER_CREATED template_id=scratch logical_name=sbx-f4f33e1a9ac2f59b computer_id=cmp_9a8038e525b0 boot_to_ready_s=25.033
+COMMAND_LOG {"command": "for tool in python3 python pip pip3; do if path=\"$(command -v \"$tool\" 2>/dev/null)\"; then printf \"%s=%s\\n\" \"$tool\" \"$path\"; else printf \"%s=unavailable\\n\" \"$tool\"; fi; done; if command -v python3 >/dev/null 2>&1; then python3 --version; python3 -m pip --version 2>&1 || printf \"PIP_RESULT unavailable\\n\"; python3 -c \"import sqlite3; print('SQLITE_VERSION='+sqlite3.sqlite_version)\"; else printf \"PYTHON3_RESULT unavailable\\n\"; fi; printf \"ROOT_DISK_BYTES=\"; df -B1 --output=size / | tail -n1; printf \"CPU_COUNT=\"; nproc; awk '/MemTotal/ {print \"MEMORY_KB=\" $2}' /proc/meminfo", "dispatched": true, "execution_target": "celesto_sandbox", "step": "template_runtime_inventory"}
+GUEST_RUNTIME_INVENTORY python3=unavailable,python=unavailable,pip=unavailable,pip3=unavailable,PYTHON3_RESULT unavailable,ROOT_DISK_BYTES=21118275584,CPU_COUNT=1,MEMORY_KB=2021228
+TEMPLATE_RUNTIME_RESULT template_id=scratch python3=unavailable python_version=unavailable pip=unavailable sqlite3=unavailable root_disk_bytes=21118275584 cpu_count=1 memory_kb=2021228
+DELETE_CONFIRMED computer_id=cmp_9a8038e525b0 duration_s=6.771 polls=1
+DELETE_LIFECYCLE_COMPLETE computer_id=cmp_9a8038e525b0 name=sbx-f4f33e1a9ac2f59b
+PASS template_runtime_probe template_id=scratch

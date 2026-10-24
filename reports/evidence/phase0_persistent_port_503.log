@@ -1,0 +1,3 @@
+INVENTORY_WARNING sdk_possibly_truncated=true returned=0 requested_limit=100
+CLEAN: no recorded orphaned cloud computers
+FAIL step=ephemeral_ports error=CloudAPIError('Cloud API returned HTTP 503. The operation may have succeeded; inspect your computers in the cloud dashboard before retrying. Request ID: b26567437b3ca6dd458755cefff559c5.') last_frame=/tmp/celesto-latest/lib/python3.11/site-packages/celesto/_cloud.py:208
