@@ -1,0 +1,13 @@
+.env
+.git
+.git/
+.venv
+.pytest_cache
+.ruff_cache
+__pycache__
+*.pyc
+ui/node_modules
+ui/dist
+ui/*.tsbuildinfo
+ui/vite.config.js
+ui/vite.config.d.ts
