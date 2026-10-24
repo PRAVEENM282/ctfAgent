@@ -61,6 +61,7 @@ services:
       VULNFORGE_ACCOUNT_LIMIT_VERIFIED: ${VULNFORGE_ACCOUNT_LIMIT_VERIFIED:-0}
     volumes:
       - vulnforge-state:/var/lib/vulnforge
+      - reports-data:/app/reports
     depends_on:
       ledger:
         condition: service_healthy
@@ -74,3 +75,4 @@ services:
 volumes:
   ledger-data:
   vulnforge-state:
+  reports-data:
