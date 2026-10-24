@@ -60,7 +60,6 @@ services:
       VULNFORGE_STARTUP_ACTION: ${VULNFORGE_STARTUP_ACTION:-none}
       VULNFORGE_ACCOUNT_LIMIT_VERIFIED: ${VULNFORGE_ACCOUNT_LIMIT_VERIFIED:-0}
     volumes:
-      - reports-data:/app/reports
       - vulnforge-state:/var/lib/vulnforge
     depends_on:
       ledger:
@@ -75,4 +74,3 @@ services:
 volumes:
   ledger-data:
   vulnforge-state:
-  reports-data:

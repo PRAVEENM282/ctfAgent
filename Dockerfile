@@ -27,6 +27,7 @@ COPY --chown=vulnforge:vulnforge src ./src
 COPY --chown=vulnforge:vulnforge tests ./tests
 COPY --chown=vulnforge:vulnforge scripts ./scripts
 COPY --chown=vulnforge:vulnforge reports ./reports
+COPY --chown=vulnforge:vulnforge logs ./logs
 COPY --chown=vulnforge:vulnforge seeds ./seeds
 COPY --chown=vulnforge:vulnforge Dockerfile ./Dockerfile
 COPY --chown=vulnforge:vulnforge docker-compose.yml ./docker-compose.yml

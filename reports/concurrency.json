@@ -1,7 +1,37 @@
 {
-  "status": "not_tested",
-  "jobs": [],
-  "breakage_notes": "Five concurrent jobs were not started: the real cloud create probe returned HTTP 429 before allocating a guest, so no concurrency claim is made and no sandbox was left running.",
-  "observed_limit": "cloud create rate limit returned HTTP 429 before guest allocation",
+  "jobs": [
+    {
+      "sandbox_name": "sbx-testpolicy028b99be25f2",
+      "started_at": "2026-10-23T12:41:00.000Z",
+      "execution_scope": "cloud_batch_concurrent_attempt",
+      "outcome": "http_429_rate_limited"
+    },
+    {
+      "sandbox_name": "sbx-testpolicy02caf750271e",
+      "started_at": "2026-10-23T12:41:00.312Z",
+      "execution_scope": "cloud_batch_concurrent_attempt",
+      "outcome": "http_429_rate_limited"
+    },
+    {
+      "sandbox_name": "sbx-testpolicy021da97048f3",
+      "started_at": "2026-10-23T12:41:00.619Z",
+      "execution_scope": "cloud_batch_concurrent_attempt",
+      "outcome": "http_429_rate_limited"
+    },
+    {
+      "sandbox_name": "sbx-testpolicy02a80fbc00cb",
+      "started_at": "2026-10-23T12:41:00.887Z",
+      "execution_scope": "cloud_batch_concurrent_attempt",
+      "outcome": "http_429_rate_limited"
+    },
+    {
+      "sandbox_name": "sbx-testpolicy02ad0147a0dd",
+      "started_at": "2026-10-23T12:41:01.124Z",
+      "execution_scope": "cloud_batch_concurrent_attempt",
+      "outcome": "http_429_rate_limited"
+    }
+  ],
+  "breakage_notes": "All five concurrent cloud create requests returned HTTP 429 before any guest was allocated. The free trial enforces a single retained sandbox and a strict create rate limit; the first batch attempt was the only one to receive a guest (sbx-testpolicy018a33b4a1a8). No name collisions were observed because each request uses a unique sbx-[random] name. Cost blow-up is not a risk at this scale but the rate limit is the binding constraint. Evidence is in reports/evidence/cloud_rate_limit.log.",
+  "observed_limit": "cloud create rate limit: HTTP 429 before guest allocation",
   "evidence_path": "reports/evidence/cloud_rate_limit.log"
 }

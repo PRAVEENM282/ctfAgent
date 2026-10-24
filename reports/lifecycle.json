@@ -3,11 +3,16 @@
   "cleanup_on_failure": true,
   "cleanup_on_interrupt": true,
   "sandbox_names": [
-    "sbx-f3f63844dd3009d6"
+    "sbx-f3f63844dd3009d6",
+    "sbx-testpolicy018a33b4a1a8",
+    "sbx-8869dcc030b858b2",
+    "sbx-94c93eed9f9b98cc"
   ],
   "evidence_paths": [
     "reports/evidence/m3_live_lifecycle.log",
-    "reports/evidence/containment.log"
+    "reports/evidence/containment.log",
+    "reports/evidence/cloud_reliability_batch.json",
+    "reports/evidence/cloud_test_agent_generated_guest.log"
   ],
-  "notes": "Names are retained from actual M3 and M7 evidence; the M7 names are exported from the committed containment result."
+  "notes": "Cleanup is enforced via try/finally in lifecycle.py for every path: success, exception, and SIGINT. Names appear in logs/commands.jsonl and reports/reliability.json."
 }
