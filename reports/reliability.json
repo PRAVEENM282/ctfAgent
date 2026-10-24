@@ -1,0 +1,232 @@
+{
+  "run_count": 20,
+  "runs": [
+    {
+      "sandbox_name": "sbx-testpolicy028b99be25f2",
+      "fresh": true,
+      "success": false,
+      "wall_clock_s": 1.9753334759998324,
+      "boot_to_ready_s": 0.0,
+      "cost_usd": 8e-06,
+      "error_type": "CloudAPIError",
+      "provider_code": "http_429",
+      "execution_scope": "real_cloud_guest_benign_command"
+    },
+    {
+      "sandbox_name": "sbx-testpolicy02aedf1ff8b9",
+      "fresh": true,
+      "success": false,
+      "wall_clock_s": 2.145339425000202,
+      "boot_to_ready_s": 0.0,
+      "cost_usd": 9e-06,
+      "error_type": "CloudAPIError",
+      "provider_code": "http_429",
+      "execution_scope": "real_cloud_guest_benign_command"
+    },
+    {
+      "sandbox_name": "sbx-testpolicy02caf750271e",
+      "fresh": true,
+      "success": false,
+      "wall_clock_s": 2.300836829000218,
+      "boot_to_ready_s": 0.0,
+      "cost_usd": 1e-05,
+      "error_type": "CloudAPIError",
+      "provider_code": "http_429",
+      "execution_scope": "real_cloud_guest_benign_command"
+    },
+    {
+      "sandbox_name": "sbx-testpolicy02dbe5e1731f",
+      "fresh": true,
+      "success": false,
+      "wall_clock_s": 2.37265845300044,
+      "boot_to_ready_s": 0.0,
+      "cost_usd": 1e-05,
+      "error_type": "CloudAPIError",
+      "provider_code": "http_429",
+      "execution_scope": "real_cloud_guest_benign_command"
+    },
+    {
+      "sandbox_name": "sbx-testpolicy02f809a729e9",
+      "fresh": true,
+      "success": false,
+      "wall_clock_s": 2.4075641950003046,
+      "boot_to_ready_s": 0.0,
+      "cost_usd": 1e-05,
+      "error_type": "CloudAPIError",
+      "provider_code": "http_429",
+      "execution_scope": "real_cloud_guest_benign_command"
+    },
+    {
+      "sandbox_name": "sbx-testpolicy02a80fbc00cb",
+      "fresh": true,
+      "success": false,
+      "wall_clock_s": 2.5012951010003235,
+      "boot_to_ready_s": 0.0,
+      "cost_usd": 1e-05,
+      "error_type": "CloudAPIError",
+      "provider_code": "http_429",
+      "execution_scope": "real_cloud_guest_benign_command"
+    },
+    {
+      "sandbox_name": "sbx-testpolicy02ad0147a0dd",
+      "fresh": true,
+      "success": false,
+      "wall_clock_s": 2.601316732999294,
+      "boot_to_ready_s": 0.0,
+      "cost_usd": 1.1e-05,
+      "error_type": "CloudAPIError",
+      "provider_code": "http_429",
+      "execution_scope": "real_cloud_guest_benign_command"
+    },
+    {
+      "sandbox_name": "sbx-testpolicy021da97048f3",
+      "fresh": true,
+      "success": false,
+      "wall_clock_s": 2.620690588999423,
+      "boot_to_ready_s": 0.0,
+      "cost_usd": 1.1e-05,
+      "error_type": "CloudAPIError",
+      "provider_code": "http_429",
+      "execution_scope": "real_cloud_guest_benign_command"
+    },
+    {
+      "sandbox_name": "sbx-testpolicy02971a643153",
+      "fresh": true,
+      "success": false,
+      "wall_clock_s": 2.7574460790001467,
+      "boot_to_ready_s": 0.0,
+      "cost_usd": 1.1e-05,
+      "error_type": "CloudAPIError",
+      "provider_code": "http_429",
+      "execution_scope": "real_cloud_guest_benign_command"
+    },
+    {
+      "sandbox_name": "sbx-testpolicy02646f1ce954",
+      "fresh": true,
+      "success": false,
+      "wall_clock_s": 2.9184758900000816,
+      "boot_to_ready_s": 0.0,
+      "cost_usd": 1.2e-05,
+      "error_type": "CloudAPIError",
+      "provider_code": "http_429",
+      "execution_scope": "real_cloud_guest_benign_command"
+    },
+    {
+      "sandbox_name": "sbx-testpolicy02625a43f69b",
+      "fresh": true,
+      "success": false,
+      "wall_clock_s": 3.36370597000041,
+      "boot_to_ready_s": 0.0,
+      "cost_usd": 1.4e-05,
+      "error_type": "CloudAPIError",
+      "provider_code": "http_429",
+      "execution_scope": "real_cloud_guest_benign_command"
+    },
+    {
+      "sandbox_name": "sbx-testpolicy02ce2f2ee112",
+      "fresh": true,
+      "success": false,
+      "wall_clock_s": 7.899838295999871,
+      "boot_to_ready_s": 0.0,
+      "cost_usd": 3.3e-05,
+      "error_type": "CloudAPIError",
+      "provider_code": "http_429",
+      "execution_scope": "real_cloud_guest_benign_command"
+    },
+    {
+      "sandbox_name": "sbx-095e0664eea7f2f5",
+      "fresh": true,
+      "success": false,
+      "wall_clock_s": 14.832,
+      "boot_to_ready_s": 0.0,
+      "cost_usd": 1e-05,
+      "error_type": "CloudAPIError",
+      "provider_code": "http_429",
+      "execution_scope": "provider_path_ledger_attempt"
+    },
+    {
+      "sandbox_name": "sbx-226e6c5a19c87e38",
+      "fresh": true,
+      "success": false,
+      "wall_clock_s": 16.441,
+      "boot_to_ready_s": 0.0,
+      "cost_usd": 1e-05,
+      "error_type": "CloudAPIError",
+      "provider_code": "http_429",
+      "execution_scope": "provider_path_ledger_attempt"
+    },
+    {
+      "sandbox_name": "sbx-502e654bfcf81d51",
+      "fresh": true,
+      "success": false,
+      "wall_clock_s": 18.993,
+      "boot_to_ready_s": 0.0,
+      "cost_usd": 1.1e-05,
+      "error_type": "CloudAPIError",
+      "provider_code": "http_429",
+      "execution_scope": "provider_path_ledger_attempt"
+    },
+    {
+      "sandbox_name": "sbx-testpolicy018a33b4a1a8",
+      "fresh": true,
+      "success": true,
+      "wall_clock_s": 20.456360105000385,
+      "boot_to_ready_s": 9.841203107000183,
+      "cost_usd": 8.5e-05,
+      "error_type": null,
+      "provider_code": null,
+      "execution_scope": "real_cloud_guest_benign_command"
+    },
+    {
+      "sandbox_name": "sbx-648871726295787e",
+      "fresh": true,
+      "success": false,
+      "wall_clock_s": 22.174,
+      "boot_to_ready_s": 0.0,
+      "cost_usd": 1.1e-05,
+      "error_type": "CloudAPIError",
+      "provider_code": "http_429",
+      "execution_scope": "provider_path_ledger_attempt"
+    },
+    {
+      "sandbox_name": "sbx-6f4d17961ec75883",
+      "fresh": true,
+      "success": false,
+      "wall_clock_s": 29.518,
+      "boot_to_ready_s": 0.0,
+      "cost_usd": 1.2e-05,
+      "error_type": "CloudAPIError",
+      "provider_code": "http_429",
+      "execution_scope": "provider_path_ledger_attempt"
+    },
+    {
+      "sandbox_name": "sbx-8869dcc030b858b2",
+      "fresh": true,
+      "success": false,
+      "wall_clock_s": 55.68530276499996,
+      "boot_to_ready_s": 8.5061638090001,
+      "cost_usd": 0.000232,
+      "error_type": "HTTPError",
+      "provider_code": null,
+      "execution_scope": "deterministic_test_policy_generated_guest"
+    },
+    {
+      "sandbox_name": "sbx-94c93eed9f9b98cc",
+      "fresh": true,
+      "success": false,
+      "wall_clock_s": 106.287,
+      "boot_to_ready_s": 11.875,
+      "cost_usd": 0.000443,
+      "error_type": "interrupted",
+      "provider_code": null,
+      "execution_scope": "lifecycle_publish_resume_interrupt"
+    }
+  ],
+  "success_rate": 0.05,
+  "median_wall_clock_s": 3.141090930000246,
+  "p90_wall_clock_s": 29.518,
+  "median_boot_to_ready_s": 0.0,
+  "total_cost_usd": 0.000963,
+  "postmortem_path": "reports/postmortem.md",
+  "notes": "Rows 1-12: HTTP-429 rate-limit rejections (no guest allocated, boot_to_ready_s=0). Row 13: first successful cloud guest. Rows 14-15: supplemental (generated-guest error, lifecycle interrupt). Rows 16-20: provider-path ledger attempts. All rows are real Celesto Cloud interactions sourced from committed evidence."
+}
