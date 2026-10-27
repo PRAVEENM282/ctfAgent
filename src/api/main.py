@@ -43,6 +43,7 @@ ERROR_MESSAGES = {
     "invalid_state": "state is not supported",
     "invalid_execution_target": "execution_target must be celesto_sandbox",
     "invalid_description": "description must be a non-empty string of at most 2000 characters",
+    "invalid_vulnerability_selection": "vulnerability selection is invalid",
     "invalid_payload": "request body is invalid",
     "duplicate_run_id": "run_id already exists",
     "duplicate_sandbox_name": "sandbox_name already exists",
@@ -98,9 +99,18 @@ def _validation_error_code(exc: RequestValidationError) -> str:
         "state": "invalid_state",
         "execution_target": "invalid_execution_target",
         "description": "invalid_description",
+        "mode": "invalid_vulnerability_selection",
+        "vulnerabilities": "invalid_vulnerability_selection",
     }
     for error in exc.errors():
         location = error.get("loc", ())
+        message = str(error.get("msg", "")).lower()
+        if (
+            any(str(part) in {"mode", "vulnerabilities"} for part in location)
+            or "vulnerability profile" in message
+            or "mode must be" in message
+        ):
+            return "invalid_vulnerability_selection"
         if len(location) > 1 and location[0] == "body":
             code = field_codes.get(str(location[1]))
             if code:
@@ -192,7 +202,9 @@ def create_app(
     async def post_lab(payload: LabCreate, request: Request) -> Any:
         try:
             snapshot = await request.app.state.lab_manager.create_lab(
-                payload.description
+                payload.description,
+                mode=payload.mode,
+                vulnerabilities=payload.vulnerabilities,
             )
         except LabExecutionError as exc:
             return _error_response(exc.code, status_code=502)

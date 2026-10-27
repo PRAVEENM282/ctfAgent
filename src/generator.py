@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from src.agent.loop import AgentLoop, AgentLoopConfig, AgentResult
-from src.agent.tools import WRITE_APP_TOOL, ToolDispatcher
+from src.agent.tools import WRITE_APP_TOOL, ToolDispatcher, validate_generated_source
 from src.challenge import (
     ChallengeVariation,
     StaticCheckResult,
@@ -63,7 +63,12 @@ class ChallengeGenerator:
         loop = AgentLoop(
             self.client,
             self.repository,
-            ToolDispatcher(write),
+            ToolDispatcher(
+                write,
+                validator=lambda source: validate_generated_source(
+                    source, variation.vulnerabilities
+                ),
+            ),
             self.attempt_id,
             config=self.config,
         )

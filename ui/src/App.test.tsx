@@ -42,8 +42,25 @@ describe("VulnForge dashboard", () => {
     await user.type(screen.getByLabelText(/site description/i), "Create a search lesson.");
     await user.click(screen.getByRole("button", { name: /generate lab/i }));
 
-    await waitFor(() => expect(api.createLab).toHaveBeenCalledWith("Create a search lesson."));
+    await waitFor(() => expect(api.createLab).toHaveBeenCalledWith("Create a search lesson.", "single", ["sql_injection"]));
     expect(screen.getByText(/lab creation queued/i)).toBeInTheDocument();
+  });
+
+  it("submits a selected vulnerability bundle", async () => {
+    vi.mocked(api.createLab).mockResolvedValue(createSnapshot());
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.type(screen.getByLabelText(/site description/i), "Create a mixed lesson.");
+    await user.selectOptions(screen.getByLabelText(/vulnerability mode/i), "bundle");
+    await user.click(screen.getByLabelText(/SQL injection/));
+    await user.click(screen.getByRole("button", { name: /generate lab/i }));
+
+    await waitFor(() => expect(api.createLab).toHaveBeenCalledWith(
+      "Create a mixed lesson.",
+      "bundle",
+      ["reflected_xss", "path_traversal", "idor"],
+    ));
   });
 
   it("publishes only after verification and confirms cleanup", async () => {

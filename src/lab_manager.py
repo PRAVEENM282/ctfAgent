@@ -28,7 +28,7 @@ from src.agent.tools import make_agent_tool_writer
 from src.api.schemas import LabCreate, LabPhase, LabSnapshot, RunState
 from src.approval import ApprovalRequired
 from src.celesto_adapter import CelestoAdapter, NetworkPolicyViolation
-from src.challenge import build_variation
+from src.challenge import ChallengeVariation, build_variation
 from src.generator import (
     ChallengeGenerationError,
     ChallengeGenerator,
@@ -40,9 +40,11 @@ from src.publish import PublicationError, PublishedSession, VerifiedPublisher
 from src.verification import (
     TrustedFixtureSeeder,
     VerificationResult,
+    build_benign_path,
     make_control_plane_requester,
     verify_private_target,
 )
+from src.vulnerability_profiles import profiles_for
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +86,7 @@ class _LabRecord:
     adapter: Any | None = None
     lifecycle: RunLifecycle | None = None
     attempt: LifecycleAttempt | None = None
+    variation: ChallengeVariation | None = None
     generated: GeneratedChallenge | None = None
     verification: VerificationResult | None = None
     approval_id: str | None = None
@@ -153,10 +156,22 @@ class LabManager:
         self._records: dict[str, _LabRecord] = {}
         self._closed = False
 
-    async def create_lab(self, description: str) -> LabSnapshot:
+    async def create_lab(
+        self,
+        description: str,
+        *,
+        mode: str = "single",
+        vulnerabilities: list[str] | tuple[str, ...] | None = None,
+    ) -> LabSnapshot:
         if self._closed:
             raise LabConflict("the lab manager is closed")
         normalized = LabCreate(description=description).description
+        variation = build_variation(
+            os.getenv("VULNFORGE_VARIATION_SEED") or None,
+            operator_description=normalized,
+            mode=mode,
+            vulnerabilities=vulnerabilities,
+        )
         run_id = f"run-{secrets.token_hex(6)}"
         attempt_id = f"attempt-{secrets.token_hex(6)}"
         batch_id = f"batch-{secrets.token_hex(6)}"
@@ -183,6 +198,7 @@ class LabManager:
             batch_id=batch_id,
             sandbox_name=sandbox_name,
             description=normalized,
+            variation=variation,
         )
         self._records[run_id] = record
         record.worker = asyncio.create_task(
@@ -359,10 +375,9 @@ class LabManager:
     async def _run(self, record: _LabRecord) -> None:
         try:
             settings = self.provider_settings_factory()
-            variation = build_variation(
-                os.getenv("VULNFORGE_VARIATION_SEED") or None,
-                operator_description=record.description,
-            )
+            variation = record.variation
+            if variation is None:
+                raise LabExecutionError("lab_execution_failed")
             await self.repository.set_run_phase(record.run_id, "generating")
             record.phase = "generating"
             record.message = _PHASE_MESSAGES[record.phase]
@@ -460,7 +475,11 @@ class LabManager:
             ready = await asyncio.to_thread(
                 adapter.control_plane_command,
                 attempt.guest,
-                "python3 -c 'import urllib.request; print(urllib.request.urlopen(\"http://127.0.0.1:8000/search?q=health\", timeout=8).status)'",
+                "python3 -c "
+                + repr(
+                    "import urllib.request; "
+                    f"print(urllib.request.urlopen('http://127.0.0.1:8000{build_benign_path(variation)}', timeout=8).status)"
+                ),
                 purpose="private app readiness probe",
             )
             if not ready.dispatched or ready.exit_code != 0:
@@ -475,6 +494,9 @@ class LabManager:
                 make_control_plane_requester(
                     adapter.control_plane_guard(attempt.guest),
                     attempt.guest.command_context,
+                    allowed_routes=tuple(
+                        profile.route for profile in profiles_for(variation.vulnerabilities)
+                    ),
                 ),
                 source=generated.source,
             )

@@ -2,7 +2,9 @@
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+from src.vulnerability_profiles import normalize_selection
 
 RunState = Literal["created", "ready", "running", "succeeded", "failed", "deleted"]
 ExecutionTarget = Literal["celesto_sandbox"]
@@ -15,6 +17,13 @@ LabPhase = Literal[
     "cleaning_up",
     "cleaned_up",
     "failed",
+]
+VulnerabilityMode = Literal["single", "bundle"]
+VulnerabilityId = Literal[
+    "sql_injection",
+    "reflected_xss",
+    "path_traversal",
+    "idor",
 ]
 
 
@@ -36,6 +45,8 @@ class LabCreate(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
     description: str = Field(min_length=1, max_length=2000)
+    mode: VulnerabilityMode = "single"
+    vulnerabilities: list[VulnerabilityId] | None = None
 
     @field_validator("description")
     @classmethod
@@ -43,6 +54,11 @@ class LabCreate(BaseModel):
         if any(ord(character) < 32 and character not in "\t\n\r" for character in value):
             raise ValueError("description contains unsupported control characters")
         return value
+
+    @model_validator(mode="after")
+    def validate_vulnerability_selection(self) -> "LabCreate":
+        normalize_selection(self.mode, self.vulnerabilities)
+        return self
 
 
 class LabSnapshot(BaseModel):

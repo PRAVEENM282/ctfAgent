@@ -11,14 +11,19 @@ import shlex
 from collections.abc import Callable
 from typing import Any
 
+from src.vulnerability_profiles import DEFAULT_VULNERABILITIES, profiles_for
+
 _FLAG_LITERAL = re.compile(r"VF\{[0-9a-fA-F]{32}\}")
-_FORBIDDEN = re.compile(r"(?i)\b(flask|django|fastapi|uvicorn|subprocess|socket|requests|httpx|urllib|http\.client|ftplib)\b")
+_FORBIDDEN = re.compile(
+    r"(?i)\b(flask|django|fastapi|uvicorn|subprocess|socket|requests|httpx|http\.client|ftplib)\b"
+    r"|(?<![\w.])urllib\.(?!parse\b)"
+)
 
 WRITE_APP_TOOL: dict[str, Any] = {
     "type": "function",
     "function": {
         "name": "write_app",
-        "description": "Write the generated stdlib SQLi challenge source to /root/app.py.",
+        "description": "Write the generated stdlib vulnerability challenge source to /root/app.py.",
         "parameters": {
             "type": "object",
             "additionalProperties": False,
@@ -28,7 +33,7 @@ WRITE_APP_TOOL: dict[str, Any] = {
                     "type": "string",
                     "minLength": 100,
                     "maxLength": 6000,
-                    "description": "Complete Python source for the challenge app; do not include a flag literal.",
+                    "description": "Complete Python source for the selected challenge profiles; do not include a flag or private marker literal.",
                 }
             },
         },
@@ -40,7 +45,10 @@ class ToolValidationError(ValueError):
     pass
 
 
-def validate_generated_source(source: str) -> dict[str, Any]:
+def validate_generated_source(
+    source: str,
+    required_vulnerabilities: tuple[str, ...] | list[str] | None = None,
+) -> dict[str, Any]:
     if not isinstance(source, str) or not 100 <= len(source) <= 60000:
         raise ToolValidationError("source must contain 100 to 60000 characters")
     if _FLAG_LITERAL.search(source):
@@ -61,16 +69,24 @@ def validate_generated_source(source: str) -> dict[str, Any]:
         raise ToolValidationError("source must import http.server")
     if not any(name == "sqlite3" or name.startswith("sqlite3.") for name in imported):
         raise ToolValidationError("source must import sqlite3")
-    if "/search" not in source or "q" not in source:
-        raise ToolValidationError("source must expose the /search route and q parameter")
-    if "secrets" not in source:
-        raise ToolValidationError("source must query the trusted secrets table")
+    selected = tuple(required_vulnerabilities or DEFAULT_VULNERABILITIES)
+    for profile in profiles_for(selected):
+        for required in profile.source_requirements:
+            if required not in source:
+                raise ToolValidationError(
+                    f"source must support {profile.id}: missing {required}"
+                )
     return {"source_sha256": hashlib.sha256(source.encode()).hexdigest(), "bytes": len(source.encode())}
 
 
 class ToolDispatcher:
-    def __init__(self, write_app: Callable[[str], dict[str, Any]]) -> None:
+    def __init__(
+        self,
+        write_app: Callable[[str], dict[str, Any]],
+        validator: Callable[[str], dict[str, Any]] | None = None,
+    ) -> None:
         self._write_app = write_app
+        self._validator = validator or validate_generated_source
 
     def dispatch(self, name: str, arguments: str | dict[str, Any]) -> dict[str, Any]:
         if name != "write_app":
@@ -80,7 +96,7 @@ class ToolDispatcher:
             if not isinstance(parsed, dict) or set(parsed) != {"source"}:
                 raise ToolValidationError("write_app arguments must contain only source")
             source = parsed["source"]
-            checks = validate_generated_source(source)
+            checks = self._validator(source)
             written = self._write_app(source)
             result = {"ok": True, **checks, **_safe_write_summary(written)}
             return result

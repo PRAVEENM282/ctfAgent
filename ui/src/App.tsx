@@ -5,7 +5,7 @@ import { LabError } from "./components/LabError";
 import { LabProgress } from "./components/LabProgress";
 import { LabResult } from "./components/LabResult";
 import { Badge } from "./components/ui/Badge";
-import { type ApiError, type LabSnapshot } from "./types";
+import { type ApiError, type LabSnapshot, type VulnerabilityId, type VulnerabilityMode } from "./types";
 
 const pollingPhases = new Set(["queued", "generating", "verifying", "awaiting_publication", "cleaning_up"]);
 
@@ -30,11 +30,11 @@ export default function App() {
     return () => window.clearInterval(timer);
   }, [refresh, snapshot]);
 
-  async function handleCreate(description: string) {
+  async function handleCreate(description: string, mode: VulnerabilityMode, vulnerabilities: VulnerabilityId[]) {
     setSubmitting(true);
     setError(null);
     try {
-      setSnapshot(await createLab(description));
+      setSnapshot(await createLab(description, mode, vulnerabilities));
     } catch (caught) {
       setError(safeMessage(caught));
       setSnapshot(null);
@@ -88,7 +88,7 @@ export default function App() {
             <p className="eyebrow">Isolated lab control plane</p>
             <h1>Build a vulnerable site.<br /><em>Verify it privately.</em></h1>
           </div>
-          <p className="hero-copy">One controlled path from natural-language idea to a short-lived SQL-injection lab. Nothing becomes public until you approve it.</p>
+          <p className="hero-copy">One controlled path from natural-language idea to a short-lived vulnerable lab. Choose one profile or bundle several; nothing becomes public until you approve it.</p>
         </section>
 
         {visibleError && <LabError message={visibleError} canRetry={canStartNew} onRetry={() => setError(null)} />}

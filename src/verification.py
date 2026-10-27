@@ -7,10 +7,11 @@ import json
 import shlex
 import urllib.parse
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from src.challenge import ChallengeVariation, StaticCheckResult, static_check
+from src.vulnerability_profiles import profiles_for
 
 
 class FixtureSeedError(RuntimeError):
@@ -30,13 +31,39 @@ class TrustedFixtureSeeder:
         execute: Callable[[str], object],
     ) -> None:
         payload = json.dumps(
-            {"flag": spec.flag, "records": list(spec.records)},
+            {
+                "flag": spec.flag,
+                "records": list(spec.records),
+                "profiles": [
+                    {
+                        "id": 1,
+                        "username": "learner-one",
+                        "email": "learner-one@example.invalid",
+                        "secret": "synthetic-public-profile",
+                    },
+                    {
+                        "id": 2,
+                        "username": "learner-two",
+                        "email": "learner-two@example.invalid",
+                        "secret": (
+                            spec.marker_for("idor")
+                            if "idor" in spec.vulnerabilities
+                            else "synthetic-private-profile"
+                        ),
+                    },
+                ],
+                "path_secret": (
+                    spec.marker_for("path_traversal")
+                    if "path_traversal" in spec.vulnerabilities
+                    else "synthetic-private-file"
+                ),
+            },
             separators=(",", ":"),
         ).encode("utf-8")
         upload(self.seed_path, payload)
         result = execute(
             "python3 -c '"
-            "import json,sqlite3; "
+            "import json,pathlib,sqlite3; "
             "p=json.load(open(\"/root/.vulnforge_seed.json\")); "
             "db=sqlite3.connect(\"/root/app.db\"); "
             "db.execute(\"CREATE TABLE IF NOT EXISTS secrets (name TEXT PRIMARY KEY, value TEXT NOT NULL)\"); "
@@ -44,6 +71,12 @@ class TrustedFixtureSeeder:
             "db.execute(\"INSERT INTO secrets(name,value) VALUES (?,?)\",(\"flag\",p[\"flag\"])); "
             "db.execute(\"CREATE TABLE IF NOT EXISTS records (id TEXT PRIMARY KEY, name TEXT, email TEXT)\"); "
             "db.executemany(\"INSERT OR REPLACE INTO records VALUES (?,?,?)\",[(r[\"id\"],r[\"name\"],r[\"email\"]) for r in p[\"records\"]]); "
+            "db.execute(\"CREATE TABLE IF NOT EXISTS profiles (id INTEGER PRIMARY KEY, username TEXT, email TEXT, secret TEXT)\"); "
+            "db.execute(\"DELETE FROM profiles\"); "
+            "db.executemany(\"INSERT INTO profiles VALUES (?,?,?,?)\",[(r[\"id\"],r[\"username\"],r[\"email\"],r[\"secret\"]) for r in p[\"profiles\"]]); "
+            "base=pathlib.Path(\"/root/vulnforge_files\"); (base/\"public\").mkdir(parents=True,exist_ok=True); "
+            "(base/\"public\"/\"README.txt\").write_text(\"synthetic public file\\n\"); "
+            "(base/\"secret.txt\").write_text(p[\"path_secret\"]); "
             "db.commit()'"
         )
         if getattr(result, "exit_code", 0) != 0:
@@ -65,6 +98,7 @@ class VerificationResult:
     exploit_body_length: int
     model_visible_summary: str
     static: StaticCheckResult | None = None
+    profile_results: dict[str, dict[str, object]] = field(default_factory=dict)
 
     def as_dict(self) -> dict[str, object]:
         return {
@@ -79,16 +113,35 @@ class VerificationResult:
             "benign_body_length": self.benign_body_length,
             "exploit_body_length": self.exploit_body_length,
             "model_visible_summary": self.model_visible_summary,
+            "profile_results": self.profile_results,
         }
 
 
-def build_benign_path(spec: ChallengeVariation) -> str:
-    return f"{spec.route}?{spec.parameter}=" + urllib.parse.quote("ordinary search")
+def build_benign_path(spec: ChallengeVariation, profile_id: str | None = None) -> str:
+    selected = profile_id or spec.vulnerabilities[0]
+    if selected == "sql_injection":
+        return "/search?q=" + urllib.parse.quote("ordinary search")
+    if selected == "reflected_xss":
+        return "/echo?name=" + urllib.parse.quote("ordinary visitor")
+    if selected == "path_traversal":
+        return "/download?file=" + urllib.parse.quote("README.txt", safe="/")
+    if selected == "idor":
+        return "/profile?id=1"
+    raise ValueError(f"unsupported vulnerability profile: {selected}")
 
 
-def build_exploit_path(spec: ChallengeVariation) -> str:
-    injection = "' UNION SELECT value FROM secrets --"
-    return f"{spec.route}?{spec.parameter}=" + urllib.parse.quote(injection, safe="")
+def build_exploit_path(spec: ChallengeVariation, profile_id: str | None = None) -> str:
+    selected = profile_id or spec.vulnerabilities[0]
+    if selected == "sql_injection":
+        injection = "' UNION SELECT value FROM secrets --"
+        return "/search?q=" + urllib.parse.quote(injection, safe="")
+    if selected == "reflected_xss":
+        return "/echo?name=" + urllib.parse.quote(spec.marker_for(selected), safe="")
+    if selected == "path_traversal":
+        return "/download?file=" + urllib.parse.quote("../secret.txt", safe="")
+    if selected == "idor":
+        return "/profile?id=2"
+    raise ValueError(f"unsupported vulnerability profile: {selected}")
 
 
 def verify_private_target(
@@ -100,28 +153,53 @@ def verify_private_target(
     static: StaticCheckResult | None = None
     if source is not None:
         static = static_check(source, spec)
-    benign_raw = request(build_benign_path(spec))
-    exploit_raw = request(build_exploit_path(spec))
-    benign = _body_bytes(benign_raw)
-    exploit = _body_bytes(exploit_raw)
-    expected = spec.flag.encode()
-    benign_revealed = expected in benign
-    exploit_matched = expected in exploit
+    profile_results: dict[str, dict[str, object]] = {}
+    for profile in profiles_for(spec.vulnerabilities):
+        benign = _body_bytes(request(build_benign_path(spec, profile.id)))
+        exploit = _body_bytes(request(build_exploit_path(spec, profile.id)))
+        expected = (
+            spec.flag
+            if profile.id == "sql_injection"
+            else spec.marker_for(profile.id)
+        ).encode()
+        benign_revealed = expected in benign
+        exploit_matched = expected in exploit
+        profile_results[profile.id] = {
+            "benign_revealed": benign_revealed,
+            "exploit_matched": exploit_matched,
+            "benign_body_sha256": hashlib.sha256(benign).hexdigest(),
+            "exploit_body_sha256": hashlib.sha256(exploit).hexdigest(),
+            "benign_body_length": len(benign),
+            "exploit_body_length": len(exploit),
+        }
+    first_profile = profile_results[spec.vulnerabilities[0]]
+    benign_revealed = any(
+        bool(result["benign_revealed"]) for result in profile_results.values()
+    )
+    exploit_matched = all(
+        bool(result["exploit_matched"]) for result in profile_results.values()
+    )
     static_pass = static.passed if static is not None else True
     passed = static_pass and not benign_revealed and exploit_matched
+    benign_hash = str(first_profile["benign_body_sha256"])
+    exploit_hash = str(first_profile["exploit_body_sha256"])
     return VerificationResult(
         passed=passed,
         benign_revealed=benign_revealed,
         exploit_matched=exploit_matched,
         static_pass=static_pass,
-        expected_flag_length=len(expected),
+        expected_flag_length=len(spec.flag.encode()),
         expected_flag_sha256=spec.flag_digest,
-        benign_body_sha256=hashlib.sha256(benign).hexdigest(),
-        exploit_body_sha256=hashlib.sha256(exploit).hexdigest(),
-        benign_body_length=len(benign),
-        exploit_body_length=len(exploit),
-        model_visible_summary=f"private verification passed={passed} benign_revealed={benign_revealed} exploit_matched={exploit_matched}",
+        benign_body_sha256=benign_hash,
+        exploit_body_sha256=exploit_hash,
+        benign_body_length=int(str(first_profile["benign_body_length"])),
+        exploit_body_length=int(str(first_profile["exploit_body_length"])),
+        model_visible_summary=(
+            f"private verification passed={passed} profiles={len(profile_results)} "
+            f"benign_revealed={benign_revealed} exploit_matched={exploit_matched}"
+        ),
         static=static,
+        profile_results=profile_results,
     )
 
 
@@ -137,12 +215,18 @@ class PrivateRequestError(RuntimeError):
     pass
 
 
-def make_control_plane_requester(command_guard: Any, context: Any) -> Callable[[str], str]:
+def make_control_plane_requester(
+    command_guard: Any,
+    context: Any,
+    allowed_routes: set[str] | tuple[str, ...] | list[str] | None = None,
+) -> Callable[[str], str]:
     """Build a verifier-only localhost requester; raw body never enters model traces."""
 
     def request(path: str) -> str:
-        if not isinstance(path, str) or not path.startswith("/search?"):
-            raise ValueError("private verifier path must be a /search query")
+        allowed = set(allowed_routes or {"/search"})
+        parsed = urllib.parse.urlsplit(path) if isinstance(path, str) else None
+        if parsed is None or parsed.path not in allowed or not parsed.query:
+            raise ValueError("private verifier path is not an allowed challenge query")
         target = "http://127.0.0.1:8000" + path
         command = (
             "python3 -c "

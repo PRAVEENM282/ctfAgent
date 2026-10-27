@@ -1,6 +1,6 @@
 # VulnForge
 
-VulnForge is a small, auditable CTF-lab generator. It creates a deliberately vulnerable SQL-injection lesson inside a Celesto computer, verifies the intended exploit privately, exposes the lab only after verification, and deletes the guest and public route during cleanup.
+VulnForge is a small, auditable CTF-lab generator. It creates deliberately vulnerable SQL-injection, reflected-XSS, path-traversal, IDOR, or explicitly bundled lessons inside a Celesto computer, verifies every selected exploit privately, exposes the lab only after verification, and deletes the guest and public route during cleanup.
 
 ## Problem statement
 
@@ -21,7 +21,7 @@ FastAPI control plane  --->  PostgreSQL run ledger
         |       +--> temporary published port
         |       +--> revoke and delete
         |
-        +--> cloud-compatible LLM for the main dashboard path
+         +--> configured cloud-compatible or local Ollama LLM
         +--> deterministic test policy for offline tests only
 
 Every command record has execution_target=celesto_sandbox.
@@ -39,9 +39,22 @@ Evidence paths include `reports/evidence/phase0_network_policy_probe.log`, `repo
 
 ## Agent and model modes
 
-The **main dashboard** uses the configured cloud-compatible provider from `.env` (`LLM_BASE_URL`, `LLM_API_KEY`, and `LLM_MODEL`). The configured Mistral account accepted `GET /models`, but the previous model name `zai-glm-5-2` was not listed; choose a listed model such as `mistral-small-latest` before a live dashboard generation. Provider rate limiting is surfaced as a failure and is not hidden.
+The **main dashboard** uses the configured OpenAI-compatible provider from `.env`. Cloud execution remains selected through `CELESTO_PROVIDER=cloud`; the model can be a remote provider or a local Ollama model (`LLM_PROVIDER=ollama`, `OLLAMA_BASE_URL`, and `LLM_MODEL`). Provider rate limiting is surfaced as a failure and is not hidden.
+
+Celesto local mode is available for private VM smoke tests when the host has a working QEMU/KVM setup. Celesto 0.1.7 does not expose public port publication for local computers, so the complete dashboard lifecycle (including approval-gated publication and route revocation) requires `CELESTO_PROVIDER=cloud`.
 
 The **test-only cloud guest runner** uses `src/agent/test_client.py`. It is a deterministic in-process policy that emits the fixed `write_app` tool call, uses no LLM API request, and exists only to exercise the real Celesto Cloud guest, command guard, generated source write, private app start, and cleanup path. It must not be described as model-generated output.
+
+### Vulnerability profiles
+
+The dashboard defaults to one SQL-injection profile for backward compatibility. The operator can switch to one of these profiles:
+
+- `sql_injection`: `/search?q=` with a synthetic SQLite query flaw.
+- `reflected_xss`: `/echo?name=` with an intentionally unescaped reflection.
+- `path_traversal`: `/download?file=` with fixtures confined to `/root/vulnforge_files` inside the guest.
+- `idor`: `/profile?id=` with synthetic profiles returned without an authorization check.
+
+Bundle mode requires at least two selected profiles and publishes only when every selected private exploit passes while benign requests remain clean. Selection can be sent through the API as `mode` and `vulnerabilities`, or configured for standalone runs with `VULNFORGE_VULNERABILITY_MODE` and `VULNFORGE_VULNERABILITIES`.
 
 ## Eval report
 
@@ -55,7 +68,7 @@ python scripts/validate_reports.py --require-complete
 
 The exporter refuses to create `reports/reliability.json` when fewer than 20 qualifying ledger rows exist. The latest cloud create probe returned HTTP `429` before allocating a guest; that result is recorded in `reports/evidence/cloud_rate_limit.log` and `reports/reliability_blocked.json` when the exporter is run against a ledger with fewer than 20 rows. No missing rows are filled with estimates.
 
-The current export contains 18 observed rows: 15 provider-path ledger attempts, one deterministic test-policy guest, one deterministic generated-guest attempt, and one publish/resume/interrupt lifecycle attempt. The three supplemental rows are labelled with their source evidence and are not presented as successful cloud-LLM runs.
+`reports/reliability.json` contains all unique successful evidence rows plus eight representative failure rows. Duplicate sandbox records are collapsed and each retained row includes its evidence sources. Remaining failure records stay in the raw evidence files for auditability. The rows use the deterministic test policy and are not presented as successful cloud-LLM runs.
 
 ## Containment test
 
@@ -73,7 +86,8 @@ The agent records `created -> ready -> running -> succeeded/failed -> deleted`. 
 
 ```bash
 cp .env.example .env
-# Put real, uncommitted Celesto Cloud and LLM values in .env.
+# Keep CELESTO_PROVIDER=cloud for Celesto Cloud execution. Set either a
+# remote OpenAI-compatible LLM or LLM_PROVIDER=ollama for a local model.
 docker compose up --build -d --wait
 ```
 

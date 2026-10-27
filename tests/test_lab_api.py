@@ -25,7 +25,13 @@ class FakeLabManager:
         self.closed = False
         self.description = ""
 
-    async def create_lab(self, description: str) -> LabSnapshot:
+    async def create_lab(
+        self,
+        description: str,
+        *,
+        mode: str = "single",
+        vulnerabilities: list[str] | None = None,
+    ) -> LabSnapshot:
         self.description = description
         return self.snapshot
 
@@ -57,7 +63,13 @@ class FakeLabManager:
 
 
 class FailingLabManager(FakeLabManager):
-    async def create_lab(self, description: str) -> LabSnapshot:
+    async def create_lab(
+        self,
+        description: str,
+        *,
+        mode: str = "single",
+        vulnerabilities: list[str] | None = None,
+    ) -> LabSnapshot:
         raise LabExecutionError("provider_request_failed")
 
 
@@ -86,6 +98,36 @@ async def test_create_lab_trims_description_and_returns_accepted_snapshot(client
     assert response.json()["phase"] == "queued"
     assert response.json()["run_id"] == "run-abc123def456"
     assert client._transport.app.state.test_manager.description == "Create a product search lesson."
+
+
+@pytest.mark.anyio
+async def test_create_lab_accepts_a_profile_bundle(client: AsyncClient) -> None:
+    response = await client.post(
+        "/api/labs",
+        json={
+            "description": "Create a mixed vulnerability lesson.",
+            "mode": "bundle",
+            "vulnerabilities": ["sql_injection", "reflected_xss"],
+        },
+    )
+
+    assert response.status_code == 202
+    assert response.json()["phase"] == "queued"
+
+
+@pytest.mark.anyio
+async def test_create_lab_rejects_invalid_profile_selection(client: AsyncClient) -> None:
+    response = await client.post(
+        "/api/labs",
+        json={
+            "description": "Create an invalid selection.",
+            "mode": "single",
+            "vulnerabilities": ["sql_injection", "idor"],
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "invalid_vulnerability_selection"
 
 
 @pytest.mark.anyio

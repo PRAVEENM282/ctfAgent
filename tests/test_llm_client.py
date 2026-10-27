@@ -373,6 +373,21 @@ def test_provider_config_from_environment_supports_generic_auth_settings(
     assert settings.config.api_key_prefix == ""
 
 
+def test_provider_config_supports_local_ollama_without_a_remote_key(monkeypatch) -> None:
+    monkeypatch.setenv("LLM_PROVIDER", "ollama")
+    monkeypatch.delenv("LLM_BASE_URL", raising=False)
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    monkeypatch.setenv("LLM_MODEL", "small-local-model")
+    monkeypatch.delenv("LLM_API_KEY_HEADER", raising=False)
+    monkeypatch.delenv("LLM_API_KEY_PREFIX", raising=False)
+
+    settings = provider_config_from_environment()
+
+    assert settings.base_url == "http://host.docker.internal:11434/v1"
+    assert settings.api_key == "ollama"
+    assert settings.model == "small-local-model"
+
+
 def test_provider_config_defaults_to_openai_and_bearer_auth(monkeypatch) -> None:
     for name in (
         "LLM_PROVIDER",

@@ -9,3 +9,4 @@ ui/vite.config.js
 ui/vite.config.d.ts
 node_modules/
 docs/
+.vulnforge-state/

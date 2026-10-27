@@ -1,4 +1,4 @@
-import { ApiError, type ApiErrorBody, type LabSnapshot } from "./types";
+import { ApiError, type ApiErrorBody, type LabSnapshot, type VulnerabilityId, type VulnerabilityMode } from "./types";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
@@ -24,10 +24,14 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
-export function createLab(description: string): Promise<LabSnapshot> {
+export function createLab(
+  description: string,
+  mode: VulnerabilityMode = "single",
+  vulnerabilities: VulnerabilityId[] = ["sql_injection"],
+): Promise<LabSnapshot> {
   return request<LabSnapshot>("/api/labs", {
     method: "POST",
-    body: JSON.stringify({ description }),
+    body: JSON.stringify({ description, mode, vulnerabilities }),
   });
 }
 
