@@ -24,3 +24,11 @@ def test_deterministic_source_passes_the_challenge_static_checks() -> None:
 
     assert result.passed is True
     assert result.flag_in_source is False
+
+
+def test_deterministic_source_supports_the_full_vulnerability_bundle() -> None:
+    spec = build_variation("test-client-bundle", mode="bundle")
+
+    result = static_check(TEST_SOURCE, spec)
+
+    assert result.passed is True

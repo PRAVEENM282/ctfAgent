@@ -25,8 +25,24 @@ from src.celesto_adapter import CelestoAdapter, calculate_celesto_cost_usd
 from src.challenge import build_variation
 from src.command_guard import CommandContext
 from src.generator import ChallengeGenerator
+from src.verification import build_benign_path
 
 EVIDENCE = ROOT / "reports" / "evidence" / "cloud_test_agent.log"
+
+
+def _configure_writable_state_dir() -> None:
+    """Use the container path when writable, otherwise isolate host-runner state."""
+
+    configured = Path(os.environ.get("VULNFORGE_STATE_DIR", "/var/lib/vulnforge"))
+    try:
+        configured.mkdir(parents=True, exist_ok=True)
+        probe = configured / ".write-probe"
+        probe.write_text("ok", encoding="utf-8")
+        probe.unlink()
+    except OSError:
+        configured = ROOT / ".vulnforge-state"
+        configured.mkdir(parents=True, exist_ok=True)
+    os.environ["VULNFORGE_STATE_DIR"] = str(configured)
 
 
 class NoopRepository:
@@ -98,6 +114,7 @@ def run() -> int:
     if os.getenv("CELESTO_PROVIDER", "cloud").strip().lower() != "cloud":
         raise RuntimeError("cloud_test_agent requires CELESTO_PROVIDER=cloud")
 
+    _configure_writable_state_dir()
     EVIDENCE.parent.mkdir(parents=True, exist_ok=True)
     started = time.monotonic()
     adapter = CelestoAdapter(audit_path=ROOT / "logs" / "commands.jsonl")
@@ -138,7 +155,8 @@ def run() -> int:
                 request_max_tokens=128,
             ),
         )
-        generated = asyncio.run(generator.generate(build_variation("cloud-test-agent")))
+        variation = build_variation("cloud-test-agent")
+        generated = asyncio.run(generator.generate(variation))
         result.update(
             {
                 "agent_model": "deterministic_test_policy",
@@ -165,14 +183,18 @@ def run() -> int:
             raise RuntimeError("generated app start failed")
         ready = adapter.control_plane_command(
             guest,
-            "python3 -c 'import urllib.request; print(urllib.request.urlopen(\"http://127.0.0.1:8000/search?q=health\", timeout=8).status)'",
+            "python3 -c "
+            + repr(
+                "import urllib.request; "
+                f"print(urllib.request.urlopen('http://127.0.0.1:8000{build_benign_path(variation)}', timeout=8).status)"
+            ),
             timeout=15,
             purpose="probe generated app inside the guest",
         )
         if ready.exit_code != 0 or ready.stdout.strip() != "200":
             raise RuntimeError("generated app readiness failed")
         endpoint = adapter.publish(guest, 8000)
-        public_status = _probe(endpoint.url)
+        public_status = _probe(endpoint.url.rstrip("/") + build_benign_path(variation))
         result.update(
             {
                 "generated_app_private_status": 200,

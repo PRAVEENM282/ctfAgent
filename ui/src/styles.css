@@ -24,7 +24,7 @@
 
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 320px; min-height: 100vh; background: var(--bg); }
-button, textarea { font: inherit; }
+button, textarea, select, input { font: inherit; }
 button { cursor: pointer; }
 button:disabled, textarea:disabled { cursor: not-allowed; opacity: .55; }
 button:focus-visible, textarea:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
@@ -61,6 +61,17 @@ a { color: inherit; }
 .textarea:focus { border-color: var(--accent); background: #101722; outline: none; }
 .field-meta { display: flex; justify-content: space-between; gap: 12px; color: #687587; font-size: 11px; line-height: 1.4; }
 .field-error { color: var(--danger) !important; font-size: 12px !important; }
+.field select { width: 100%; min-height: 42px; padding: 0 12px; border: 1px solid var(--border-strong); border-radius: 6px; color: var(--text); background: var(--surface-soft); }
+.field select:focus { border-color: var(--accent); outline: none; }
+.profile-fieldset { display: grid; gap: 9px; margin: 0; padding: 0; border: 0; }
+.profile-fieldset legend { padding: 0; color: var(--muted-strong); font-size: 12px; font-weight: 700; }
+.profile-options { display: grid; gap: 8px; }
+.profile-option { display: flex; align-items: flex-start; gap: 10px; padding: 10px 11px; border: 1px solid var(--border); border-radius: 6px; background: rgba(11,16,23,.55); cursor: pointer; }
+.profile-option:hover { border-color: var(--border-strong); background: var(--surface-raised); }
+.profile-option input { margin-top: 2px; accent-color: var(--accent); }
+.profile-option strong, .profile-option small { display: block; }
+.profile-option strong { color: var(--muted-strong); font-size: 12px; }
+.profile-option small { margin-top: 3px; color: var(--muted); font-size: 11px; }
 .capability-row { display: flex; align-items: center; gap: 12px; padding: 13px 14px; border: 1px solid #2e3a48; border-radius: 6px; background: rgba(11,16,23,.8); }
 .capability-row strong, .capability-row span { display: block; }
 .capability-row strong { font-size: 12px; }

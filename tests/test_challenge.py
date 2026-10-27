@@ -42,6 +42,53 @@ def test_variation_has_unique_seed_and_flag_and_prompt_omits_flag() -> None:
     assert "sqlite3" in prompt
 
 
+def test_variation_supports_single_profile_and_explicit_bundle() -> None:
+    xss = build_variation(
+        "xss-seed",
+        mode="single",
+        vulnerabilities=["reflected_xss"],
+    )
+    bundle = build_variation(
+        "bundle-seed",
+        mode="bundle",
+        vulnerabilities=["sql_injection", "path_traversal", "idor"],
+    )
+
+    assert xss.mode == "single"
+    assert xss.vulnerabilities == ("reflected_xss",)
+    assert xss.marker_for("reflected_xss") not in build_prompt(xss)
+    assert bundle.mode == "bundle"
+    assert bundle.vulnerabilities == (
+        "sql_injection",
+        "path_traversal",
+        "idor",
+    )
+    assert all(profile_id in build_prompt(bundle) for profile_id in bundle.vulnerabilities)
+
+
+def test_variation_rejects_invalid_profile_selection() -> None:
+    with pytest.raises(ValueError, match="exactly one"):
+        build_variation(
+            "bad-single-selection",
+            mode="single",
+            vulnerabilities=["sql_injection", "idor"],
+        )
+
+    with pytest.raises(ValueError, match="duplicates"):
+        build_variation(
+            "duplicate-selection",
+            mode="bundle",
+            vulnerabilities=["idor", "idor"],
+        )
+
+    with pytest.raises(ValueError, match="unsupported"):
+        build_variation(
+            "unknown-selection",
+            mode="single",
+            vulnerabilities=["command_injection"],
+        )
+
+
 def test_operator_description_is_included_as_untrusted_constrained_context() -> None:
     spec = build_variation(
         "description-seed",

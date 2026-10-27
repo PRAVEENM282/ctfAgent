@@ -1,0 +1,24 @@
+{
+  "attempt_number": 4,
+  "started_at_utc": "2026-10-27T05:28:02.250689Z",
+  "finished_at_utc": "2026-10-27T05:28:07.482741Z",
+  "row": {
+    "sandbox_name": "sbx-testpolicy049675d6ca40",
+    "fresh": true,
+    "success": false,
+    "wall_clock_s": 5.231906257999981,
+    "boot_to_ready_s": 0.0,
+    "cost_usd": 2.2e-05,
+    "model_mode": "deterministic_test_policy",
+    "execution_scope": "real_cloud_guest_benign_command",
+    "cleanup_confirmed": true,
+    "error_type": "CloudAPIError",
+    "provider_status": 429,
+    "provider_code": "http_429",
+    "provider_side_effects": "none"
+  },
+  "evidence": {
+    "command_audit": "logs/commands.jsonl",
+    "attempt_record": "reports/evidence/reliability_attempts_v2/attempt-04.json"
+  }
+}

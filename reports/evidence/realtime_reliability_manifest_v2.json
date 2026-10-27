@@ -1,0 +1,12 @@
+{
+  "collected_at_utc": "2026-10-27T05:45:10.670677Z",
+  "target_attempts": 20,
+  "attempt_count": 20,
+  "successful_attempts": 1,
+  "evidence_rows": "reports/evidence/realtime_reliability_rows_v2.json",
+  "evidence_jsonl": "reports/evidence/realtime_reliability_attempts_v2.jsonl",
+  "per_attempt_evidence": "reports/evidence/reliability_attempts_v2/",
+  "command_audit": "logs/commands.jsonl",
+  "model_mode": "deterministic_test_policy",
+  "execution_scope": "real_cloud_guest_benign_command"
+}

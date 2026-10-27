@@ -4,6 +4,8 @@ from src.challenge import build_variation
 from src.verification import (
     FixtureSeedError,
     TrustedFixtureSeeder,
+    build_benign_path,
+    build_exploit_path,
     make_control_plane_requester,
     verify_private_target,
 )
@@ -40,6 +42,40 @@ def test_private_verifier_fails_when_benign_request_reveals_flag() -> None:
     assert result.exploit_matched is True
 
 
+def test_private_verifier_requires_every_selected_profile_in_a_bundle() -> None:
+    spec = build_variation(
+        "bundle-verification",
+        mode="bundle",
+        vulnerabilities=["sql_injection", "reflected_xss", "path_traversal", "idor"],
+    )
+    seen: list[str] = []
+
+    def request(path: str) -> str:
+        seen.append(path)
+        for profile_id in spec.vulnerabilities:
+            if path == build_exploit_path(spec, profile_id):
+                return (
+                    spec.flag
+                    if profile_id == "sql_injection"
+                    else spec.marker_for(profile_id)
+                )
+            if path == build_benign_path(spec, profile_id):
+                return "synthetic benign response"
+        raise AssertionError(f"unexpected verifier path: {path}")
+
+    result = verify_private_target(spec, request)
+
+    assert result.passed is True
+    assert result.exploit_matched is True
+    assert set(result.profile_results) == set(spec.vulnerabilities)
+    assert len(seen) == len(spec.vulnerabilities) * 2
+    assert all(
+        spec.marker_for(profile_id) not in result.as_dict().__repr__()
+        for profile_id in spec.vulnerabilities
+        if profile_id != "sql_injection"
+    )
+
+
 def test_trusted_fixture_seeder_keeps_flag_out_of_command_text() -> None:
     spec = build_variation("seed-boundary")
     uploads = []
@@ -56,6 +92,7 @@ def test_trusted_fixture_seeder_keeps_flag_out_of_command_text() -> None:
 
     assert uploads[0][1].find(spec.flag.encode()) >= 0
     assert spec.flag not in commands[0]
+    assert all(marker not in commands[0] for _, marker in spec.private_markers)
     assert uploads[-1][1] == b""
 
 

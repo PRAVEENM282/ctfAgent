@@ -1,11 +1,17 @@
 {
-  "cleanup_confirmed": false,
-  "cost_usd": 2.7e-05,
-  "error_type": "CloudAPIError",
+  "agent_model": "deterministic_test_policy",
+  "boot_to_ready_s": 11.495549201999893,
+  "cleanup_confirmed": true,
+  "computer_id": "cmp_4dec3f3bf80a",
+  "cost_usd": 0.000185,
+  "egress_status": "blocked",
   "execution_target": "celesto_sandbox",
-  "provider_code": "http_429",
-  "provider_side_effects": "none",
-  "provider_status": 429,
-  "success": false,
-  "wall_clock_s": 6.536348265000015
+  "generated_app_private_status": 200,
+  "generated_source_bytes": 2033,
+  "generated_source_sha256": "8fe54f3a29c71039a163e318bdc0c117b42756aa79c8c9269412eeaac6c98d3a",
+  "published_status": 200,
+  "published_url_host": "p-gsh3ub3rqpnvuvbk.celesto.dev",
+  "sandbox_name": "sbx-7dc6dc549a62f09c",
+  "success": true,
+  "wall_clock_s": 44.31708643700017
 }

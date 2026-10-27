@@ -729,6 +729,18 @@ def provider_config_from_environment() -> ProviderSettings:
             api_format = "openai-compatible"
     if provider.lower() == "anthropic":
         base_url = base_url or "https://api.anthropic.com/v1"
+    if provider.lower() == "ollama":
+        base_url = (
+            _first_configured_environment_value("OLLAMA_BASE_URL")
+            or base_url
+            or "http://host.docker.internal:11434/v1"
+        )
+        api_key = (
+            _first_configured_environment_value("OLLAMA_API_KEY")
+            or api_key
+            or "ollama"
+        )
+        model = _first_configured_environment_value("OLLAMA_MODEL") or model
     if not base_url or not api_key or not model:
         raise ProviderConfigurationError("provider configuration is incomplete")
     default_header, default_prefix = {

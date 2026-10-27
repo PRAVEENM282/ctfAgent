@@ -13,22 +13,47 @@ from typing import Any
 from src.agent.provider import ProviderResponse
 
 TEST_SOURCE = """import http.server
+import os
 import sqlite3
+import urllib.parse
+
+
+def query_value(path, key):
+    return urllib.parse.parse_qs(urllib.parse.urlsplit(path).query).get(key, [''])[0]
 
 
 class Handler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
-        if not self.path.startswith('/search?'):
+        if self.path.startswith('/search?'):
+            query = query_value(self.path, 'q')
+            statement = "SELECT email FROM records WHERE name LIKE '%" + query + "%'"
+            with sqlite3.connect('/root/app.db') as database:
+                database.execute('SELECT value FROM secrets LIMIT 0').fetchall()
+                rows = database.execute(statement).fetchall()
+            body = ('\\n'.join(str(row[0]) for row in rows) or 'no results').encode()
+        elif self.path.startswith('/echo?'):
+            body = query_value(self.path, 'name').encode()
+        elif self.path.startswith('/download?'):
+            filename = query_value(self.path, 'file')
+            target = os.path.join('/root/vulnforge_files/public', filename)
+            try:
+                with open(target, 'rb') as handle:
+                    body = handle.read()
+            except OSError:
+                self.send_response(404)
+                self.end_headers()
+                return
+        elif self.path.startswith('/profile?'):
+            profile_id = query_value(self.path, 'id')
+            with sqlite3.connect('/root/app.db') as database:
+                rows = database.execute(
+                    'SELECT secret FROM profiles WHERE id = ' + profile_id
+                ).fetchall()
+            body = ('\\n'.join(str(row[0]) for row in rows) or 'not found').encode()
+        else:
             self.send_response(404)
             self.end_headers()
             return
-        query = self.path.split('q=', 1)[1].split('&', 1)[0]
-        query = query.replace('%27', "'").replace('%20', ' ').replace('%25', '%')
-        statement = "SELECT email FROM records WHERE name LIKE '%" + query + "%'"
-        with sqlite3.connect('/root/app.db') as database:
-            database.execute('SELECT value FROM secrets LIMIT 0').fetchall()
-            rows = database.execute(statement).fetchall()
-        body = ('\\n'.join(str(row[0]) for row in rows) or 'no results').encode()
         self.send_response(200)
         self.send_header('Content-Length', str(len(body)))
         self.end_headers()
@@ -44,7 +69,7 @@ if __name__ == '__main__':
 
 
 class DeterministicTestClient:
-    """Return the fixed safe challenge source without contacting a provider."""
+    """Return the fixed safe profile-bundle source without contacting a provider."""
 
     source = "test_policy"
 

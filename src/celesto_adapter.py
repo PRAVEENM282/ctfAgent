@@ -1,4 +1,4 @@
-"""Version-isolated Celesto Cloud lifecycle adapter."""
+"""Version-isolated Celesto lifecycle adapter."""
 
 from __future__ import annotations
 
@@ -78,6 +78,20 @@ class NetworkPolicyViolation(RuntimeError):
     def __init__(self, message: str, *, guest_duration_s: float | None = None) -> None:
         super().__init__(message)
         self.guest_duration_s = guest_duration_s
+
+
+def _delete_local_guest(computer_id: str, *, computer: Any | None = None, **_kwargs: Any) -> float:
+    """Delete a local VM object without calling the Cloud inventory API."""
+    started = time.monotonic()
+    if computer is None:
+        raise RuntimeError(f"local Celesto guest {computer_id} is not attached")
+    try:
+        computer.delete()
+    finally:
+        close = getattr(computer, "close", None)
+        if callable(close):
+            close()
+    return max(0.0, time.monotonic() - started)
 
 
 def _configure_network_policy_off(computer: Any) -> None:
@@ -204,11 +218,18 @@ class CelestoAdapter:
         sleep: Callable[[float], None] | None = None,
         trusted_file_uploader: Callable[[Any, str, bytes], None] | None = None,
     ) -> None:
+        self._provider = os.getenv("CELESTO_PROVIDER", "cloud").strip().lower()
+        if self._provider not in {"cloud", "local"}:
+            raise ValueError("CELESTO_PROVIDER must be cloud or local")
         self._computer_factory = computer_factory or Computer
-        self._list_ids = list_ids or _list_cloud_ids
-        self._reap = reap or reap_orphans
-        self._record = record or record_guest
-        self._delete = delete or delete_guest
+        self._list_ids = list_ids or (
+            _list_cloud_ids if self._provider == "cloud" else lambda: set()
+        )
+        self._reap = reap or (reap_orphans if self._provider == "cloud" else list)
+        self._record = record or (record_guest if self._provider == "cloud" else lambda *_args: None)
+        self._delete = delete or (
+            delete_guest if self._provider == "cloud" else _delete_local_guest
+        )
         self._configure_network_policy = (
             configure_network_policy or _configure_network_policy_off
         )
@@ -287,12 +308,26 @@ class CelestoAdapter:
             command_context = command_context_factory(guest_name)
             if command_context.sandbox_name != guest_name:
                 raise ValueError("command context must use the created sandbox name")
-            computer = self._computer_factory(
-                provider="cloud", lifetime="ephemeral", template_id=template_id
-            )
+            if self._provider == "cloud":
+                computer_options = {
+                    "provider": "cloud",
+                    "lifetime": "ephemeral",
+                    "template_id": template_id,
+                }
+            else:
+                computer_options = {
+                    "provider": "local",
+                    "lifetime": "ephemeral",
+                    "backend": os.getenv("CELESTO_BACKEND", "qemu"),
+                    "os": os.getenv("CELESTO_OS", "ubuntu"),
+                    "comm_channel": "ssh",
+                    "internet_settings": {"mode": "off"},
+                }
+            computer = self._computer_factory(**computer_options)
             # The generated request path is intentionally isolated to this adapter.
             # Refuse to start if it cannot set the pinned policy field.
-            self._configure_network_policy(computer)
+            if self._provider == "cloud":
+                self._configure_network_policy(computer)
             started = self._monotonic()
             try:
                 computer.start()
@@ -423,6 +458,8 @@ class CelestoAdapter:
     def _reconcile_create(
         self, baseline: set[str], known_id: str | None, sandbox_name: str
     ) -> None:
+        if self._provider == "local":
+            return
         current = self._list_ids()
         added = current - baseline
         if known_id and added and known_id not in added:
@@ -444,6 +481,11 @@ class CelestoAdapter:
         return computer.run(f"cd /root && {command}", timeout=timeout)
 
     def publish(self, guest: Guest, port: int = 8000) -> PublishedEndpoint:
+        if self._provider == "local":
+            raise RuntimeError(
+                "Celesto local computers cannot publish public ports; "
+                "set CELESTO_PROVIDER=cloud for the publication lifecycle"
+            )
         result = guest.computer.publish_port(port)
         if not result.url:
             raise RuntimeError("Celesto publish response omitted its URL")
@@ -550,6 +592,8 @@ class CelestoAdapter:
         )
 
     def revoke(self, guest: Guest, endpoint: PublishedEndpoint) -> float:
+        if self._provider == "local":
+            raise RuntimeError("local Celesto has no public route to revoke")
         started = self._monotonic()
         try:
             guest.computer.unpublish_port(endpoint.port)

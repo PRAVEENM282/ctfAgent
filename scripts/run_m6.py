@@ -17,7 +17,10 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from src.agent.loop import AgentLoopConfig
-from src.agent.provider import OpenAICompatibleClient, ProviderConfig
+from src.agent.provider import (
+    provider_client_from_settings,
+    provider_config_from_environment,
+)
 from src.agent.tools import make_agent_tool_writer
 from src.approval import ApprovalRequired
 from src.celesto_adapter import CelestoAdapter
@@ -29,9 +32,11 @@ from src.publish import VerifiedPublisher
 from src.recovery import RecoveryAttempt, Step7FaultInjector
 from src.verification import (
     TrustedFixtureSeeder,
+    build_benign_path,
     make_control_plane_requester,
     verify_private_target,
 )
+from src.vulnerability_profiles import profiles_for
 
 
 def _require(name: str) -> str:
@@ -99,13 +104,18 @@ async def run_once(
     fault_injector: Step7FaultInjector | None = None,
 ) -> dict[str, object]:
     _require("CELESTO_API_KEY")
-    base_url = _require("LLM_BASE_URL")
-    api_key = _require("LLM_API_KEY")
-    model = _require("LLM_MODEL")
-    provider = os.getenv("LLM_PROVIDER", "openai").strip() or "openai"
+    settings = provider_config_from_environment()
+    provider = settings.provider
+    model = settings.model
     repository = RunRepository()
     await repository.migrate_runtime_schema()
-    variation = build_variation(os.environ.get("VULNFORGE_VARIATION_SEED"))
+    raw_profiles = os.getenv("VULNFORGE_VULNERABILITIES", "").strip()
+    variation = build_variation(
+        os.environ.get("VULNFORGE_VARIATION_SEED"),
+        mode=os.getenv("VULNFORGE_VULNERABILITY_MODE", "single"),
+        vulnerabilities=[item.strip() for item in raw_profiles.split(",") if item.strip()]
+        or None,
+    )
     await repository.preflight_llm_batch(
         provider=provider, model=model, attempt_count=1, max_http_attempts=int(os.getenv("LLM_MAX_HTTP_ATTEMPTS", "8")),
         token_budget=int(os.getenv("VULNFORGE_TOKEN_BUDGET", "8000")),
@@ -140,7 +150,7 @@ async def run_once(
     try:
         writer = make_agent_tool_writer(adapter.agent_command_tool(attempt.guest))
         generator = ChallengeGenerator(
-            OpenAICompatibleClient(ProviderConfig(base_url=base_url, api_key=api_key, model=model)),
+            provider_client_from_settings(settings),
             repository, attempt.attempt_id, writer,
             config=AgentLoopConfig(
                 max_iterations=int(os.getenv("VULNFORGE_MAX_ITERATIONS", "20")),
@@ -164,7 +174,15 @@ async def run_once(
         start = adapter.control_plane_command(attempt.guest, "python3 -c 'import subprocess; subprocess.Popen([\"python3\",\"/root/app.py\"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)'", purpose="start generated app privately")
         if not start.dispatched or start.exit_code != 0:
             raise RuntimeError("private app start failed")
-        ready = adapter.control_plane_command(attempt.guest, "python3 -c 'import urllib.request; print(urllib.request.urlopen(\"http://127.0.0.1:8000/search?q=health\", timeout=8).status)'", purpose="private app readiness probe")
+        ready = adapter.control_plane_command(
+            attempt.guest,
+            "python3 -c "
+            + repr(
+                "import urllib.request; "
+                f"print(urllib.request.urlopen('http://127.0.0.1:8000{build_benign_path(variation)}', timeout=8).status)"
+            ),
+            purpose="private app readiness probe",
+        )
         if not ready.dispatched or ready.exit_code != 0:
             raise RuntimeError("private app readiness failed")
         (fault_injector or Step7FaultInjector.from_environment()).before_verifier()
@@ -173,6 +191,9 @@ async def run_once(
             make_control_plane_requester(
                 adapter.control_plane_guard(attempt.guest),
                 attempt.guest.command_context,
+                allowed_routes=tuple(
+                    profile.route for profile in profiles_for(variation.vulnerabilities)
+                ),
             ),
             source=generated.source,
         )

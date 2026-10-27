@@ -9,6 +9,8 @@ export type LabPhase =
   | "failed";
 
 export type RunState = "created" | "ready" | "running" | "succeeded" | "failed" | "deleted";
+export type VulnerabilityMode = "single" | "bundle";
+export type VulnerabilityId = "sql_injection" | "reflected_xss" | "path_traversal" | "idor";
 
 export interface LabSnapshot {
   run_id: string;

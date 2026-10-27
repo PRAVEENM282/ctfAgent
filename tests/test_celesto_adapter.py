@@ -106,6 +106,63 @@ def test_unknown_create_is_reconciled_and_reaped_before_one_retry(
     assert ("policy_off",) in events
 
 
+def test_local_provider_uses_qemu_options_and_skips_cloud_policy(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("CELESTO_PROVIDER", "local")
+    events: list[dict[str, object]] = []
+
+    def create(**options: object) -> FakeComputer:
+        events.append(options)
+        return FakeComputer(outcome="local-ready")
+
+    adapter = celesto_adapter.CelestoAdapter(
+        computer_factory=create,
+        configure_network_policy=lambda _computer: events.append({"policy": "cloud"}),
+        command_guard_factory=lambda _computer: _egress_guard(tmp_path),
+        record=lambda *_args: None,
+    )
+
+    guest = adapter.create_guest(command_context_factory=_command_context)
+
+    assert guest.computer_id == "local-ready"
+    assert events[0]["provider"] == "local"
+    assert events[0]["backend"] == "qemu"
+    assert events[0]["comm_channel"] == "ssh"
+    assert events[0]["internet_settings"] == {"mode": "off"}
+    assert {"policy": "cloud"} not in events
+
+
+def test_local_provider_deletes_attached_vm_without_cloud_api(monkeypatch) -> None:
+    monkeypatch.setenv("CELESTO_PROVIDER", "local")
+    events: list[str] = []
+
+    class LocalComputer:
+        def delete(self) -> None:
+            events.append("delete")
+
+        def close(self) -> None:
+            events.append("close")
+
+    adapter = celesto_adapter.CelestoAdapter()
+    elapsed = adapter._delete("local-id", computer=LocalComputer(), name="sbx-local")
+
+    assert elapsed >= 0
+    assert events == ["delete", "close"]
+
+
+def test_local_provider_refuses_public_publication(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("CELESTO_PROVIDER", "local")
+    adapter = celesto_adapter.CelestoAdapter()
+    guest = celesto_adapter.Guest(
+        computer_id="local-id",
+        sandbox_name="sbx-0123456789abcdef",
+        computer=object(),
+        boot_to_ready_s=0.1,
+    )
+
+    with pytest.raises(RuntimeError, match="cannot publish public ports"):
+        adapter.publish(guest)
+
+
 def test_second_unknown_create_is_not_retried_again(monkeypatch, tmp_path) -> None:
     inventories = deque([set(), set(), set(), set()])
     create_count = 0
