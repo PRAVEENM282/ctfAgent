@@ -8,7 +8,7 @@ def test_docker_image_includes_tests_and_report_mount_probe() -> None:
     compose = Path("docker-compose.yml").read_text(encoding="utf-8")
 
     assert "COPY --chown=vulnforge:vulnforge tests ./tests" in dockerfile
-    assert "FROM node:22.23.3-bookworm-slim AS frontend-build" in dockerfile
+    assert "FROM node:22-bookworm-slim AS frontend-build" in dockerfile
     assert "RUN npm run build --prefix ui" in dockerfile
     assert "COPY --from=frontend-build" in dockerfile
     assert 'USER vulnforge' in dockerfile

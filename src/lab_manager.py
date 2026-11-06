@@ -7,6 +7,7 @@ import hmac
 import logging
 import os
 import secrets
+import time
 import urllib.error
 import urllib.request
 from collections.abc import Callable
@@ -186,6 +187,7 @@ class LabManager:
         self.external_probe = external_probe or _external_probe
         self._records: dict[str, _LabRecord] = {}
         self._closed = False
+        self._reaper_task: asyncio.Task[None] | None = None
 
     async def create_lab(
         self,
@@ -403,10 +405,96 @@ class LabManager:
             return self._snapshot(record)
         return await self._cleanup(record)
 
+    def start_reaper(self, interval_seconds: float = 60.0) -> None:
+        """Launch the TTL reaper background task (idempotent)."""
+        if self._reaper_task is not None and not self._reaper_task.done():
+            return
+        self._reaper_task = asyncio.create_task(
+            self._reaper_loop(interval_seconds), name="vulnforge-ttl-reaper"
+        )
+
+    async def _reaper_loop(self, interval_seconds: float) -> None:
+        while not self._closed:
+            try:
+                await asyncio.sleep(interval_seconds)
+                await self.reap_expired()
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:  # noqa: BLE001 - the reaper must keep running.
+                logger.error("ttl reaper iteration failed error_type=%s", type(exc).__name__)
+
+    async def reap_expired(self) -> list[str]:
+        """Tear down any active lab whose guest is older than the TTL."""
+        ttl_seconds = config.sandbox_ttl_minutes() * 60
+        now = time.monotonic()
+        expired: list[str] = []
+        for record in list(self._records.values()):
+            if record.phase in {"cleaned_up", "failed"}:
+                continue
+            guest = record.attempt.guest if record.attempt is not None else None
+            created = getattr(guest, "created_monotonic", None)
+            if created is None or (now - created) < ttl_seconds:
+                continue
+            expired.append(record.run_id)
+        for run_id in expired:
+            logger.info("ttl reaper tearing down expired lab run_id=%s", run_id)
+            try:
+                await self.stop_lab(run_id)
+            except Exception as exc:  # noqa: BLE001 - continue reaping other guests.
+                logger.error(
+                    "ttl reaper teardown failed run_id=%s error_type=%s",
+                    run_id,
+                    type(exc).__name__,
+                )
+        return expired
+
+    async def reconcile_orphans(self) -> list[str]:
+        """On startup, fail any ledger run left mid-pipeline by a previous process.
+
+        In-memory execution handles do not survive a restart, so a run still in a
+        non-terminal state has no worker and its guest (if any) is orphaned. The
+        cloud orphan reaper deletes the guest; here we move the ledger row to a
+        terminal state so it never looks active again.
+        """
+        try:
+            rows = await self.repository.list_runs()
+        except Exception as exc:  # noqa: BLE001 - startup reconcile is best-effort.
+            logger.error("orphan reconcile could not list runs error_type=%s", type(exc).__name__)
+            return []
+        reconciled: list[str] = []
+        for row in rows:
+            run_id = str(row.get("run_id", ""))
+            if not run_id or run_id in self._records:
+                continue
+            if str(row.get("state")) in {"created", "ready", "running"}:
+                try:
+                    await self.repository.transition_run(
+                        run_id, "failed", error_code="orphaned_after_restart"
+                    )
+                    await self.repository.set_run_phase(run_id, "failed")
+                    reconciled.append(run_id)
+                except Exception as exc:  # noqa: BLE001 - keep reconciling others.
+                    logger.error(
+                        "orphan reconcile failed run_id=%s error_type=%s",
+                        run_id,
+                        type(exc).__name__,
+                    )
+        if reconciled:
+            logger.info("orphan reconcile marked %d run(s) failed", len(reconciled))
+        return reconciled
+
     async def close(self) -> None:
         if self._closed:
             return
         self._closed = True
+        if self._reaper_task is not None:
+            self._reaper_task.cancel()
+            try:
+                await self._reaper_task
+            except asyncio.CancelledError:
+                logger.debug("ttl reaper cancelled on shutdown")
+            except Exception as exc:  # noqa: BLE001 - shutdown must continue.
+                logger.error("ttl reaper shutdown error_type=%s", type(exc).__name__)
         active = [
             record
             for record in self._records.values()

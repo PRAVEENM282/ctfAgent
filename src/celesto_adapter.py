@@ -2,17 +2,21 @@
 
 from __future__ import annotations
 
+import base64
+import hashlib
 import json
 import logging
 import os
 import re
 import secrets
+import shlex
 import subprocess
 import time
 import urllib.error
 import urllib.request
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from decimal import ROUND_HALF_UP, Decimal
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
@@ -270,15 +274,81 @@ class CelestoAdapter:
         )
 
     def upload_trusted_file(self, guest: Guest, guest_path: str, payload: bytes) -> None:
-        """Transfer trusted bytes only through an explicitly verified SDK boundary."""
+        """Transfer trusted bytes (e.g. the flag) into the guest.
+
+        Celesto 0.1.7 exposes no dedicated file-put API, so the payload is written
+        with a direct SDK ``run`` (not through CommandGuard) precisely so the flag
+        never enters the command audit. The action is still recorded in the audit
+        log, but with the payload withheld (only path, size and sha256).
+        """
         if not guest_path.startswith("/root/") or not isinstance(payload, bytes):
             raise ValueError("trusted uploads require a /root path and bytes payload")
-        if self._trusted_file_uploader is None:
-            raise RuntimeError(
-                "Celesto 0.1.7 exposes no verified public file-upload method; "
-                "refusing to put trusted data in a command string"
-            )
-        self._trusted_file_uploader(guest.computer, guest_path, payload)
+        if self._trusted_file_uploader is not None:
+            self._trusted_file_uploader(guest.computer, guest_path, payload)
+            return
+        self._default_trusted_upload(guest, guest_path, payload)
+
+    def _default_trusted_upload(
+        self, guest: Guest, guest_path: str, payload: bytes
+    ) -> None:
+        started = self._monotonic()
+        encoded = base64.b64encode(payload).decode("ascii")
+        code = (
+            "import base64,pathlib;"
+            f"pathlib.Path({guest_path!r}).write_bytes(base64.b64decode({encoded!r}))"
+        )
+        command = "python3 -c " + shlex.quote(code)
+        # Direct trusted dispatch: payload may contain the flag, so it must not be
+        # handed to CommandGuard (which would log the command string).
+        result = guest.computer.run(f"cd /root && {command}", timeout=30)
+        exit_code = int(getattr(result, "exit_code", 1))
+        elapsed_ms = round((self._monotonic() - started) * 1000)
+        self._audit_trusted_upload(guest, guest_path, payload, exit_code, elapsed_ms)
+        if exit_code != 0:
+            raise RuntimeError("trusted fixture upload to the guest failed")
+
+    def _audit_trusted_upload(
+        self,
+        guest: Guest,
+        guest_path: str,
+        payload: bytes,
+        exit_code: int,
+        duration_ms: int,
+    ) -> None:
+        """Record the upload in the command audit with the payload withheld."""
+        context = guest.command_context
+        now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
+        digest = hashlib.sha256(payload).hexdigest()
+        summary = (
+            f"trusted_file_upload path={guest_path} bytes={len(payload)} "
+            f"sha256={digest} (payload withheld from audit)"
+        )
+        record: dict[str, Any] = {
+            "ts": now,
+            "timestamp": now,
+            "run_id": getattr(context, "run_id", None),
+            "parent_run_id": getattr(context, "parent_run_id", None),
+            "batch_id": getattr(context, "batch_id", None),
+            "attempt_id": getattr(context, "attempt_id", None),
+            "sandbox_name": guest.sandbox_name,
+            "execution_target": "celesto_sandbox",
+            "origin": "control_plane_upload",
+            "command": summary,
+            "command_summary": summary,
+            "decision": "allow",
+            "dispatched": True,
+            "exit_code": exit_code,
+            "duration_ms": duration_ms,
+            "block_reason": None,
+            "purpose": "trusted fixture upload",
+            "result_summary": {"bytes": len(payload)},
+        }
+        try:
+            self._audit_path.parent.mkdir(parents=True, exist_ok=True)
+            with self._audit_path.open("a", encoding="utf-8") as handle:
+                handle.write(json.dumps(record) + "\n")
+        except OSError as exc:
+            raise RuntimeError("command audit storage is unavailable") from exc
 
     def control_plane_guard(self, guest: Guest) -> CommandGuard:
         if guest.command_context is None:

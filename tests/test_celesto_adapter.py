@@ -452,17 +452,50 @@ def test_revoke_polls_to_404_and_delete_returns_confirmed_duration(monkeypatch) 
     assert adapter.delete_guest(guest) == 3.75
 
 
-def test_trusted_upload_fails_closed_without_verified_sdk_boundary() -> None:
-    adapter = celesto_adapter.CelestoAdapter()
+def test_default_trusted_upload_withholds_payload_from_audit(tmp_path) -> None:
+    import hashlib
+    import json
+
+    audit_path = tmp_path / "logs" / "commands.jsonl"
+
+    class FakeComputer:
+        def __init__(self) -> None:
+            self.commands: list[str] = []
+
+        def run(self, command: str, timeout: int):
+            self.commands.append(command)
+            return type("R", (), {"exit_code": 0, "stdout": "", "stderr": ""})()
+
+    computer = FakeComputer()
+    adapter = celesto_adapter.CelestoAdapter(audit_path=audit_path)
+    context = celesto_adapter.CommandContext(
+        run_id="run-trusteduploads",
+        parent_run_id="run-trusteduploads",
+        batch_id="batch-trusteduploads",
+        attempt_id="attempt-trusteduploads",
+        sandbox_name="sbx-0123456789abcdef",
+    )
     guest = celesto_adapter.Guest(
         computer_id="cmp_test",
         sandbox_name="sbx-0123456789abcdef",
-        computer=object(),
+        computer=computer,
         boot_to_ready_s=1.0,
+        command_context=context,
     )
 
-    with pytest.raises(RuntimeError, match="file-upload"):
-        adapter.upload_trusted_file(guest, "/root/seed.json", b"trusted")
+    secret = b'{"flag":"VF{00000000000000000000000000000000}"}'
+    adapter.upload_trusted_file(guest, "/root/.vulnforge_seed.json", secret)
+
+    # The payload reached the guest via a direct run, not CommandGuard.
+    assert computer.commands and "write_bytes" in computer.commands[0]
+    # The audit record withholds the payload; only metadata is logged.
+    record = json.loads(audit_path.read_text(encoding="utf-8").strip())
+    assert record["decision"] == "allow"
+    assert record["execution_target"] == "celesto_sandbox"
+    assert record["sandbox_name"] == "sbx-0123456789abcdef"
+    assert hashlib.sha256(secret).hexdigest() in record["command"]
+    assert "VF{" not in record["command"]
+    assert "write_bytes" not in record["command"]
 
 
 def test_trusted_upload_uses_only_injected_verified_boundary() -> None:

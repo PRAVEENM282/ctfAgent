@@ -1,4 +1,4 @@
-FROM node:22.23.3-bookworm-slim AS frontend-build
+FROM node:22-bookworm-slim AS frontend-build
 
 WORKDIR /app
 COPY ui/package.json ui/package-lock.json ./ui/

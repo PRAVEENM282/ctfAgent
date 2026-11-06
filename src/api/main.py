@@ -167,6 +167,18 @@ def create_app(
             result = migrate()
             if inspect.isawaitable(result):
                 await result
+        # Reconcile runs left non-terminal by a previous process, then start the
+        # TTL reaper that deletes guests older than SANDBOX_TTL_MINUTES.
+        manager = app.state.lab_manager
+        reconcile = getattr(manager, "reconcile_orphans", None)
+        if callable(reconcile):
+            try:
+                await reconcile()
+            except Exception:  # noqa: BLE001 - never block startup on reconcile.
+                logging.getLogger("vulnforge.reaper").warning("orphan reconcile skipped")
+        start_reaper = getattr(manager, "start_reaper", None)
+        if callable(start_reaper):
+            start_reaper()
         await launch_startup_action()
 
     @app.on_event("shutdown")
