@@ -4,6 +4,8 @@
 
 VulnForge is a small, auditable CTF-lab generator. An LLM agent builds an intentionally vulnerable web app (SQL injection, reflected XSS, path traversal, IDOR, or a bundle) **inside a Celesto sandbox**, verifies the exploit privately from inside the guest, publishes one port so students can attack it, then deletes the guest and revokes the route. Generated code never runs on the host.
 
+> **New here? Read [GUIDE.md](GUIDE.md)** — a start-to-end operator guide: install, configure, launch, run a lab, attack it, submit the flag, tear down, and troubleshoot.
+
 ## Problem statement
 
 Cybersecurity learners and instructors need short-lived, repeatable vulnerable labs without giving generated code access to a laptop, host files, credentials, or the control-plane database. VulnForge gives the agent a real isolated computer, records every command, verifies the lab from inside the guest, exposes it only after a human approves, and leaves a ledger trail that can be reviewed after the guest is gone.
