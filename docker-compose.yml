@@ -28,16 +28,20 @@ services:
       DATABASE_URL: ${DATABASE_URL:-postgresql://ledger:ledger@ledger:5432/ledger}
       CELESTO_PROVIDER: ${CELESTO_PROVIDER:-cloud}
       CELESTO_BACKEND: ${CELESTO_BACKEND:-firecracker}
-      CELESTO_API_KEY: ${CELESTO_API_KEY:-replace-me}
-      LLM_PROVIDER: ${LLM_PROVIDER:-openai}
-      LLM_BASE_URL: ${LLM_BASE_URL:-https://api.openai.com/v1}
-      LLM_API_KEY: ${LLM_API_KEY:-replace-me}
-      LLM_MODEL: ${LLM_MODEL:-replace-with-a-model-name}
+      CELESTO_OS: ${CELESTO_OS:-ubuntu}
+      CELESTO_API_KEY: ${CELESTO_API_KEY:-}
+      ACCESS_CODE: ${ACCESS_CODE:-}
+      MAX_ACTIVE_LABS: ${MAX_ACTIVE_LABS:-1}
+      SANDBOX_TTL_MINUTES: ${SANDBOX_TTL_MINUTES:-15}
+      LLM_PROVIDER: ${LLM_PROVIDER:-ollama}
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-qwen2.5-coder:1.5b}
       LLM_API_KEY_HEADER: ${LLM_API_KEY_HEADER:-}
       LLM_API_KEY_PREFIX: ${LLM_API_KEY_PREFIX:-}
       LLM_API_FORMAT: ${LLM_API_FORMAT:-}
       LLM_TIMEOUT_SECONDS: ${LLM_TIMEOUT_SECONDS:-90}
-      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434/v1}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
       OLLAMA_API_KEY: ${OLLAMA_API_KEY:-ollama}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-}
       BEDROCK_BASE_URL: ${BEDROCK_BASE_URL:-}

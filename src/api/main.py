@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 import inspect
+import json
+import logging
 import mimetypes
 import os
 from pathlib import Path
@@ -11,12 +14,20 @@ from typing import Any, Protocol
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
+from fastapi.responses import (
+    FileResponse,
+    HTMLResponse,
+    JSONResponse,
+    Response,
+    StreamingResponse,
+)
 from fastapi.staticfiles import StaticFiles
 
+from src import config
 from src.api.schemas import (
     ApprovalCreate,
     ApprovalDecision,
+    FlagSubmission,
     HealthResponse,
     LabCreate,
     RunCreate,
@@ -53,6 +64,8 @@ ERROR_MESSAGES = {
     "approval_not_found": "approval was not found",
     "lab_not_found": "lab was not found",
     "lab_action_not_available": "this lab action is not available in the current phase",
+    "access_code_required": "a valid access code is required to manage labs",
+    "config_invalid": "the server configuration is invalid; see GET /api/config",
     "provider_request_failed": "The model provider could not complete generation.",
     "rate_limited": "The provider rate-limited generation. Check its quota or wait before retrying.",
     "http_400": "The provider rejected the request. Check the model, API format, and tool-calling support.",
@@ -139,6 +152,16 @@ def create_app(
 
     @app.on_event("startup")
     async def startup_action() -> None:
+        errors = config.config_errors()
+        if errors:
+            for message in errors:
+                logging.getLogger("vulnforge.config").warning(
+                    "configuration problem: %s", message
+                )
+            logging.getLogger("vulnforge.config").warning(
+                "lab creation will fail until configuration is fixed; GET /api/config "
+                "reports the active mode and these errors."
+            )
         migrate = getattr(app.state.repository, "migrate_runtime_schema", None)
         if callable(migrate):
             result = migrate()
@@ -179,6 +202,33 @@ def create_app(
             status_code=503,
         )
 
+    @app.get("/api/config")
+    async def get_config() -> Any:
+        return config.load_config().public_dict()
+
+    @app.get("/api/commands")
+    async def get_commands() -> Any:
+        """Return allow/block decisions from the command audit log (newest first)."""
+        audit_path = (
+            Path(os.environ.get("VULNFORGE_STATE_DIR", "."))
+            / "logs"
+            / "commands.jsonl"
+        )
+        if not audit_path.is_file():
+            audit_path = Path(__file__).resolve().parents[2] / "logs" / "commands.jsonl"
+        rows: list[dict[str, Any]] = []
+        if audit_path.is_file():
+            for line in audit_path.read_text(encoding="utf-8").splitlines()[-500:]:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    rows.append(json.loads(line))
+                except json.JSONDecodeError:
+                    continue
+        rows.reverse()
+        return rows
+
     @app.get("/api/runs")
     async def get_runs(request: Request) -> Any:
         try:
@@ -198,14 +248,25 @@ def create_app(
             return _error_response("ledger_unavailable", status_code=503)
         return jsonable_encoder(row)
 
+    def _require_access_code(request: Request) -> JSONResponse | None:
+        candidate = request.headers.get("x-access-code")
+        if not config.access_code_matches(candidate):
+            return _error_response("access_code_required", status_code=403)
+        return None
+
     @app.post("/api/labs", status_code=202)
     async def post_lab(payload: LabCreate, request: Request) -> Any:
+        access_error = _require_access_code(request)
+        if access_error is not None:
+            return access_error
         try:
             snapshot = await request.app.state.lab_manager.create_lab(
                 payload.description,
                 mode=payload.mode,
                 vulnerabilities=payload.vulnerabilities,
             )
+        except LabConflict:
+            return _error_response("lab_action_not_available", status_code=409)
         except LabExecutionError as exc:
             return _error_response(exc.code, status_code=502)
         except LedgerUnavailable:
@@ -249,6 +310,69 @@ def create_app(
         except LedgerUnavailable:
             return _error_response("ledger_unavailable", status_code=503)
         return jsonable_encoder(snapshot)
+
+    # Spec-named aliases: approve the human publication gate and tear down a lab.
+    @app.post("/api/labs/{run_id}/approve-publish")
+    async def approve_publish(run_id: str, request: Request) -> Any:
+        access_error = _require_access_code(request)
+        if access_error is not None:
+            return access_error
+        return await publish_lab(run_id, request)
+
+    @app.post("/api/labs/{run_id}/destroy")
+    async def destroy_lab(run_id: str, request: Request) -> Any:
+        access_error = _require_access_code(request)
+        if access_error is not None:
+            return access_error
+        return await stop_lab(run_id, request)
+
+    @app.post("/api/labs/{run_id}/submit-flag")
+    async def submit_flag(run_id: str, payload: FlagSubmission, request: Request) -> Any:
+        try:
+            result = await request.app.state.lab_manager.submit_flag(
+                run_id, payload.flag
+            )
+        except RunNotFound:
+            return _error_response("lab_not_found", status_code=404)
+        except LabConflict:
+            return _error_response("lab_action_not_available", status_code=409)
+        except LedgerUnavailable:
+            return _error_response("ledger_unavailable", status_code=503)
+        return jsonable_encoder(result)
+
+    @app.get("/api/labs/{run_id}/events")
+    async def lab_events(run_id: str, request: Request) -> Any:
+        try:
+            record, queue = await request.app.state.lab_manager.subscribe(run_id)
+        except RunNotFound:
+            return _error_response("lab_not_found", status_code=404)
+        except LabConflict:
+            return _error_response("lab_action_not_available", status_code=409)
+
+        manager = request.app.state.lab_manager
+
+        async def event_stream() -> Any:
+            terminal = {"cleaned_up", "failed"}
+            try:
+                while True:
+                    try:
+                        snapshot = await asyncio.wait_for(queue.get(), timeout=15)
+                    except TimeoutError:
+                        yield ": keep-alive\n\n"
+                        if await request.is_disconnected():
+                            break
+                        continue
+                    yield f"data: {json.dumps(snapshot)}\n\n"
+                    if snapshot.get("phase") in terminal:
+                        break
+            finally:
+                manager.unsubscribe(record, queue)
+
+        return StreamingResponse(
+            event_stream(),
+            media_type="text/event-stream",
+            headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+        )
 
     def _require_operator(request: Request) -> JSONResponse | None:
         candidate = authorization_header_token(

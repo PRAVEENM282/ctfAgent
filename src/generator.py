@@ -14,6 +14,19 @@ from src.challenge import (
     build_prompt,
     static_check,
 )
+from src.templates import build_fallback_source
+
+# Non-recoverable agent outcomes: a configuration or provider fault must not be
+# masked by the vetted template fallback. Only missing or invalid model output
+# (a weak model that cannot write a valid app) falls back to the template.
+_PROVIDER_FAULT_CODES = frozenset(
+    {
+        "provider_not_configured",
+        "provider_request_failed",
+        "provider_protocol_failed",
+        "rate_limited",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -22,6 +35,7 @@ class GeneratedChallenge:
     source: str
     static: StaticCheckResult
     agent: AgentResult
+    llm_fallback_used: bool = False
 
 
 class ChallengeGenerationError(RuntimeError):
@@ -41,12 +55,14 @@ class ChallengeGenerator:
         guarded_writer: Any,
         *,
         config: AgentLoopConfig | None = None,
+        allow_template_fallback: bool = False,
     ) -> None:
         self.client = client
         self.repository = repository
         self.attempt_id = attempt_id
         self.guarded_writer = guarded_writer
         self.config = config
+        self.allow_template_fallback = allow_template_fallback
 
     async def generate(self, variation: ChallengeVariation) -> GeneratedChallenge:
         captured: dict[str, str] = {}
@@ -100,11 +116,43 @@ class ChallengeGenerator:
                 )
             else:
                 code = "generation_incomplete"
+            fallback = self._fallback(variation, result, code)
+            if fallback is not None:
+                return fallback
             raise ChallengeGenerationError(
                 f"agent stopped without writing app ({result.outcome})",
                 error_code=code,
             )
         static = static_check(source, variation)
         if not static.passed:
+            fallback = self._fallback(variation, result, "generation_incomplete")
+            if fallback is not None:
+                return fallback
             raise ChallengeGenerationError("generated source failed static checks")
         return GeneratedChallenge(variation, source, static, result)
+
+    def _fallback(
+        self, variation: ChallengeVariation, result: AgentResult, code: str
+    ) -> GeneratedChallenge | None:
+        """Write the vetted template when the model could not produce valid source.
+
+        Returns ``None`` (so the caller raises) for provider/config faults or
+        when fallback is disabled. Fallback output is marked ``llm_fallback_used``
+        and must never be presented as model-generated.
+        """
+        if not self.allow_template_fallback:
+            return None
+        if code in _PROVIDER_FAULT_CODES or re.fullmatch(r"http_[45]\d\d", code or ""):
+            return None
+        source = build_fallback_source(variation)
+        static = static_check(source, variation)
+        if not static.passed:
+            return None
+        written = self.guarded_writer(source)
+        if isinstance(written, dict) and written.get("ok") is False:
+            raise ChallengeGenerationError(
+                "vetted fallback app write failed", error_code="generation_incomplete"
+            )
+        return GeneratedChallenge(
+            variation, source, static, result, llm_fallback_used=True
+        )

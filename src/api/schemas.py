@@ -61,6 +61,12 @@ class LabCreate(BaseModel):
         return self
 
 
+class LabStep(BaseModel):
+    key: str
+    label: str
+    status: Literal["pending", "running", "ok", "failed", "skipped"]
+
+
 class LabSnapshot(BaseModel):
     run_id: str
     state: RunState
@@ -72,6 +78,22 @@ class LabSnapshot(BaseModel):
     public_url: str | None = None
     public_access_warning: str | None = None
     error_code: str | None = None
+    sandbox_name: str | None = None
+    model: str | None = None
+    boot_to_ready_s: float | None = None
+    egress_status: str | None = None
+    llm_fallback_used: bool = False
+    local_preview: bool = False
+    solved: bool = False
+    flag_submissions: int = 0
+    steps: list[LabStep] = Field(default_factory=list)
+    hints: list[str] = Field(default_factory=list)
+
+
+class FlagSubmission(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    flag: str = Field(min_length=1, max_length=256)
 
 
 class ApprovalCreate(BaseModel):

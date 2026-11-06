@@ -126,7 +126,7 @@ def test_local_provider_uses_qemu_options_and_skips_cloud_policy(monkeypatch, tm
     assert guest.computer_id == "local-ready"
     assert events[0]["provider"] == "local"
     assert events[0]["backend"] == "qemu"
-    assert events[0]["comm_channel"] == "ssh"
+    assert events[0]["comm_channel"] == "vsock"
     assert events[0]["internet_settings"] == {"mode": "off"}
     assert {"policy": "cloud"} not in events
 
@@ -149,18 +149,48 @@ def test_local_provider_deletes_attached_vm_without_cloud_api(monkeypatch) -> No
     assert events == ["delete", "close"]
 
 
-def test_local_provider_refuses_public_publication(monkeypatch, tmp_path) -> None:
+def test_local_provider_exposes_a_loopback_preview(monkeypatch, tmp_path) -> None:
     monkeypatch.setenv("CELESTO_PROVIDER", "local")
+
+    class FakeFacade:
+        def __init__(self) -> None:
+            self.exposed: list[tuple[int, bool]] = []
+            self.unexposed: list[tuple[int, int]] = []
+
+        def expose_local(self, guest_port: int, *, guest_loopback: bool = False) -> int:
+            self.exposed.append((guest_port, guest_loopback))
+            return 54321
+
+        def unexpose_local(self, host_port: int, guest_port: int) -> None:
+            self.unexposed.append((host_port, guest_port))
+
+    class FakeProvider:
+        def __init__(self, facade: FakeFacade) -> None:
+            self._vm = facade
+
+    class FakeLocalComputer:
+        def __init__(self, facade: FakeFacade) -> None:
+            self._provider = FakeProvider(facade)
+
+    facade = FakeFacade()
     adapter = celesto_adapter.CelestoAdapter()
     guest = celesto_adapter.Guest(
         computer_id="local-id",
         sandbox_name="sbx-0123456789abcdef",
-        computer=object(),
+        computer=FakeLocalComputer(facade),
         boot_to_ready_s=0.1,
     )
 
-    with pytest.raises(RuntimeError, match="cannot publish public ports"):
-        adapter.publish(guest)
+    endpoint = adapter.publish(guest)
+    assert endpoint.url == "http://127.0.0.1:54321"
+    assert endpoint.host_port == 54321
+    assert endpoint.status == "local_preview"
+    assert facade.exposed == [(8000, False)]
+
+    # Revoke confirms the forward is torn down by probing the loopback port.
+    monkeypatch.setattr(celesto_adapter, "_local_port_status", lambda _port: None)
+    adapter.revoke(guest, endpoint)
+    assert facade.unexposed == [(54321, 8000)]
 
 
 def test_second_unknown_create_is_not_retried_again(monkeypatch, tmp_path) -> None:

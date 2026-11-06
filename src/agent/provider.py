@@ -735,6 +735,11 @@ def provider_config_from_environment() -> ProviderSettings:
             or base_url
             or "http://host.docker.internal:11434/v1"
         )
+        # Ollama's OpenAI-compatible API lives under /v1; accept a base URL with
+        # or without it so OLLAMA_BASE_URL=http://host:11434 also works.
+        trimmed = base_url.rstrip("/")
+        if not trimmed.endswith("/v1"):
+            base_url = trimmed + "/v1"
         api_key = (
             _first_configured_environment_value("OLLAMA_API_KEY")
             or api_key

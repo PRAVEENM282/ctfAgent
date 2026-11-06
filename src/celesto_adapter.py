@@ -63,6 +63,7 @@ class PublishedEndpoint:
     port: int
     url: str
     status: str
+    host_port: int | None = None
 
 
 @dataclass(frozen=True)
@@ -200,6 +201,20 @@ def _published_url_status(url: str) -> int | None:
     return status
 
 
+def _local_port_status(host_port: int) -> int | None:
+    """Probe a loopback preview port; return None when it refuses connections."""
+    request = urllib.request.Request(
+        f"http://127.0.0.1:{host_port}/health", headers={"User-Agent": "ctfAgent/1.0"}
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=3) as response:
+            return response.status
+    except urllib.error.HTTPError as exc:
+        return exc.code
+    except (urllib.error.URLError, TimeoutError, OSError):
+        return None
+
+
 class CelestoAdapter:
     """Expose only the project-approved Celesto lifecycle operations."""
 
@@ -315,12 +330,17 @@ class CelestoAdapter:
                     "template_id": template_id,
                 }
             else:
+                # Local guests keep egress disabled, which Celesto 0.1.7 serves
+                # over a vsock command channel (not ssh). Local port exposure
+                # with egress off is only supported on the QEMU backend, so the
+                # local provider always uses QEMU regardless of CELESTO_BACKEND
+                # (which selects the cloud microVM engine).
                 computer_options = {
                     "provider": "local",
                     "lifetime": "ephemeral",
-                    "backend": os.getenv("CELESTO_BACKEND", "qemu"),
+                    "backend": "qemu",
                     "os": os.getenv("CELESTO_OS", "ubuntu"),
-                    "comm_channel": "ssh",
+                    "comm_channel": "vsock",
                     "internet_settings": {"mode": "off"},
                 }
             computer = self._computer_factory(**computer_options)
@@ -482,14 +502,55 @@ class CelestoAdapter:
 
     def publish(self, guest: Guest, port: int = 8000) -> PublishedEndpoint:
         if self._provider == "local":
-            raise RuntimeError(
-                "Celesto local computers cannot publish public ports; "
-                "set CELESTO_PROVIDER=cloud for the publication lifecycle"
-            )
+            return self._expose_local(guest, port)
         result = guest.computer.publish_port(port)
         if not result.url:
             raise RuntimeError("Celesto publish response omitted its URL")
         return PublishedEndpoint(port, result.url, result.status)
+
+    def _local_facade(self, guest: Guest) -> Any:
+        provider = getattr(guest.computer, "_provider", None)
+        facade = getattr(provider, "_vm", None)
+        if facade is None or not hasattr(facade, "expose_local"):
+            raise RuntimeError(
+                "Celesto local runtime does not expose a host port-forward API"
+            )
+        return facade
+
+    def _expose_local(self, guest: Guest, port: int) -> PublishedEndpoint:
+        """Forward 127.0.0.1:<host_port> on the host to the guest's app port.
+
+        This is a local preview, not a public URL: it is reachable only from
+        this host's loopback interface while the guest lives.
+        """
+        facade = self._local_facade(guest)
+        try:
+            # Forward to the guest's network address (the app binds 0.0.0.0);
+            # guest_loopback=True would require SSH, which the vsock egress-off
+            # guest does not expose.
+            host_port = int(facade.expose_local(port, guest_loopback=False))
+        except Exception as exc:
+            raise RuntimeError(
+                f"local port exposure failed ({type(exc).__name__}); "
+                "local preview requires the QEMU backend with egress disabled"
+            ) from exc
+        url = f"http://127.0.0.1:{host_port}"
+        return PublishedEndpoint(port, url, "local_preview", host_port=host_port)
+
+    def _unexpose_local(self, guest: Guest, endpoint: PublishedEndpoint) -> float:
+        started = self._monotonic()
+        if endpoint.host_port is None:
+            raise RuntimeError("local endpoint has no host port to revoke")
+        facade = self._local_facade(guest)
+        facade.unexpose_local(endpoint.host_port, endpoint.port)
+        deadline = started + _REVOKE_TIMEOUT_SECONDS
+        while self._monotonic() < deadline:
+            if _local_port_status(endpoint.host_port) is None:
+                elapsed = self._monotonic() - started
+                logger.info("local preview forward revoked revoke_s=%.3f", elapsed)
+                return elapsed
+            self._sleep(min(_DELETE_POLL_SECONDS, deadline - self._monotonic()))
+        raise TimeoutError("local preview port still accepted connections after revoke")
 
     def stop_guest(self, guest: Guest) -> float:
         started = self._monotonic()
@@ -593,7 +654,7 @@ class CelestoAdapter:
 
     def revoke(self, guest: Guest, endpoint: PublishedEndpoint) -> float:
         if self._provider == "local":
-            raise RuntimeError("local Celesto has no public route to revoke")
+            return self._unexpose_local(guest, endpoint)
         started = self._monotonic()
         try:
             guest.computer.unpublish_port(endpoint.port)

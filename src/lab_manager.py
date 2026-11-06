@@ -3,17 +3,19 @@
 from __future__ import annotations
 
 import asyncio
+import hmac
 import logging
 import os
 import secrets
 import urllib.error
 import urllib.request
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any, cast
 from urllib.parse import urlsplit
 
+from src import config
 from src.agent.loop import AgentLoopConfig
 from src.agent.provider import (
     ProviderConfigurationError,
@@ -69,6 +71,21 @@ class LabStopRequested(Exception):
     """Internal signal used to let the stop action own cleanup."""
 
 
+# The ten explicit pipeline steps surfaced in the Live Run timeline and SSE.
+_STEP_DEFS: tuple[tuple[str, str], ...] = (
+    ("create_guest", "Create isolated guest"),
+    ("boot_probe", "Boot probe"),
+    ("egress_check", "Egress self-check"),
+    ("llm_customise", "LLM customisation"),
+    ("write_app", "Write app to guest"),
+    ("start_app", "Start app privately"),
+    ("verify_exploit", "Private exploit verification"),
+    ("verify_benign", "Benign request is clean"),
+    ("publish_port", "Publish port"),
+    ("final_health", "Final health check"),
+)
+
+
 @dataclass
 class _LabRecord:
     run_id: str
@@ -91,6 +108,20 @@ class _LabRecord:
     verification: VerificationResult | None = None
     approval_id: str | None = None
     publication: PublishedSession | None = None
+    steps: list[dict[str, str]] = field(
+        default_factory=lambda: [
+            {"key": key, "label": label, "status": "pending"}
+            for key, label in _STEP_DEFS
+        ]
+    )
+    subscribers: set[asyncio.Queue[dict[str, Any]]] = field(default_factory=set)
+    model: str | None = None
+    boot_to_ready_s: float | None = None
+    egress_status: str | None = None
+    llm_fallback_used: bool = False
+    local_preview: bool = False
+    solved: bool = False
+    flag_submissions: int = 0
 
 
 _PHASE_MESSAGES = {
@@ -165,6 +196,16 @@ class LabManager:
     ) -> LabSnapshot:
         if self._closed:
             raise LabConflict("the lab manager is closed")
+        active = sum(
+            1
+            for existing in self._records.values()
+            if existing.phase not in {"cleaned_up", "failed"}
+        )
+        if active >= config.max_active_labs():
+            raise LabConflict(
+                f"the active lab limit of {config.max_active_labs()} is reached; "
+                "stop a running lab before starting another"
+            )
         normalized = LabCreate(description=description).description
         variation = build_variation(
             os.getenv("VULNFORGE_VARIATION_SEED") or None,
@@ -240,6 +281,7 @@ class LabManager:
         ):
             raise LabConflict("lab is not ready for publication")
 
+        self._set_step(record, "publish_port", status="running")
         publisher: VerifiedPublisher | None = None
         session: PublishedSession | None = None
         try:
@@ -288,6 +330,12 @@ class LabManager:
             record.state = "succeeded"
             record.phase = "published"
             record.message = _PHASE_MESSAGES["published"]
+            self._set_step(record, "publish_port", status="ok")
+            self._set_step(
+                record,
+                "final_health",
+                status="ok" if session.probe_status == 200 else "failed",
+            )
             await self.repository.transition_run(
                 record.run_id,
                 "succeeded",
@@ -375,12 +423,15 @@ class LabManager:
     async def _run(self, record: _LabRecord) -> None:
         try:
             settings = self.provider_settings_factory()
+            record.model = settings.model
+            record.local_preview = config.load_config().celesto_provider == "local"
             variation = record.variation
             if variation is None:
                 raise LabExecutionError("lab_execution_failed")
             await self.repository.set_run_phase(record.run_id, "generating")
             record.phase = "generating"
             record.message = _PHASE_MESSAGES[record.phase]
+            self._set_step(record, "create_guest", "boot_probe", "egress_check", status="running")
 
             adapter = self.adapter_factory()
             lifecycle = RunLifecycle(self.repository, adapter)
@@ -400,6 +451,14 @@ class LabManager:
             )
             record.attempt = attempt
             record.state = "ready"
+            guest = attempt.guest
+            record.boot_to_ready_s = getattr(guest, "boot_to_ready_s", None)
+            egress = getattr(guest, "egress_check", None)
+            record.egress_status = getattr(egress, "status", None)
+            self._set_step(
+                record, "create_guest", "boot_probe", "egress_check", status="ok"
+            )
+            self._set_step(record, "llm_customise", "write_app", status="running")
             self._raise_if_stop_requested(record)
 
             await self.repository.preflight_llm_batch(
@@ -446,12 +505,18 @@ class LabManager:
                         "VULNFORGE_REQUEST_MAX_TOKENS", 8192
                     ),
                 ),
+                allow_template_fallback=True,
             )
             generated = await generator.generate(variation)
             record.generated = generated
+            record.llm_fallback_used = generated.llm_fallback_used
+            if generated.llm_fallback_used:
+                logger.info("llm_fallback_used run_id=%s", record.run_id)
+            self._set_step(record, "llm_customise", "write_app", status="ok")
             await self.repository.set_run_phase(record.run_id, "verifying")
             record.phase = "verifying"
             record.message = _PHASE_MESSAGES[record.phase]
+            self._set_step(record, "start_app", status="running")
             self._raise_if_stop_requested(record)
 
             await asyncio.to_thread(
@@ -484,10 +549,12 @@ class LabManager:
             )
             if not ready.dispatched or ready.exit_code != 0:
                 raise LabExecutionError("private_app_readiness_failed")
+            self._set_step(record, "start_app", status="ok")
             await self.repository.transition_run(
                 record.run_id, "running", app_ready_s=0.0
             )
             record.state = "running"
+            self._set_step(record, "verify_exploit", "verify_benign", status="running")
             verification = await asyncio.to_thread(
                 verify_private_target,
                 variation,
@@ -501,6 +568,16 @@ class LabManager:
                 source=generated.source,
             )
             record.verification = verification
+            self._set_step(
+                record,
+                "verify_exploit",
+                status="ok" if verification.exploit_matched else "failed",
+            )
+            self._set_step(
+                record,
+                "verify_benign",
+                status="failed" if verification.benign_revealed else "ok",
+            )
             if not verification.passed:
                 raise LabExecutionError("private_verification_failed")
             self._raise_if_stop_requested(record)
@@ -517,8 +594,10 @@ class LabManager:
             await self.repository.set_run_phase(record.run_id, "awaiting_publication")
             record.phase = "awaiting_publication"
             record.message = _PHASE_MESSAGES[record.phase]
+            self._emit(record)
         except LabStopRequested:
             record.message = "Stop requested; cleanup is being completed."
+            self._emit(record)
         except Exception as exc:  # noqa: BLE001 - safe error mapping is centralized.
             await self._fail(record, _error_code(exc))
 
@@ -564,6 +643,8 @@ class LabManager:
         record.error_code = code
         record.phase = "failed"
         record.message = _ERROR_CODES.get(code, _ERROR_CODES["lab_execution_failed"])
+        self._fail_pending_steps(record)
+        self._emit(record)
         if (
             record.attempt is not None
             and record.lifecycle is not None
@@ -607,6 +688,73 @@ class LabManager:
         if record.stop_requested:
             raise LabStopRequested
 
+    def _set_step(self, record: _LabRecord, *keys: str, status: str) -> None:
+        wanted = set(keys)
+        for step in record.steps:
+            if step["key"] in wanted:
+                step["status"] = status
+        self._emit(record)
+
+    def _fail_pending_steps(self, record: _LabRecord) -> None:
+        for step in record.steps:
+            if step["status"] == "running":
+                step["status"] = "failed"
+            elif step["status"] == "pending":
+                step["status"] = "skipped"
+
+    def _emit(self, record: _LabRecord) -> None:
+        if not record.subscribers:
+            return
+        snapshot = self._snapshot(record).model_dump()
+        for queue in list(record.subscribers):
+            try:
+                queue.put_nowait(snapshot)
+            except asyncio.QueueFull:  # a slow client must not stall the pipeline.
+                record.subscribers.discard(queue)
+
+    async def subscribe(
+        self, run_id: str
+    ) -> tuple[_LabRecord, asyncio.Queue[dict[str, Any]]]:
+        record = self._records.get(run_id)
+        if record is None:
+            row = await self.repository.get_run(run_id)
+            if row is None:
+                raise RunNotFound(run_id)
+            raise LabConflict("lab execution is not attached to this control plane")
+        queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue(maxsize=256)
+        record.subscribers.add(queue)
+        queue.put_nowait(self._snapshot(record).model_dump())
+        return record, queue
+
+    def unsubscribe(
+        self, record: _LabRecord, queue: asyncio.Queue[dict[str, Any]]
+    ) -> None:
+        record.subscribers.discard(queue)
+
+    async def submit_flag(self, run_id: str, candidate: str) -> dict[str, Any]:
+        record = await self._require_record(run_id)
+        record.flag_submissions += 1
+        correct = record.variation is not None and hmac.compare_digest(
+            candidate.strip(), record.variation.flag
+        )
+        if correct:
+            record.solved = True
+        self._emit(record)
+        return {
+            "correct": bool(correct),
+            "solved": record.solved,
+            "submissions": record.flag_submissions,
+        }
+
+    def _hints(self, record: _LabRecord) -> list[str]:
+        if record.variation is None:
+            return []
+        return [
+            f"{profile.label}: try the {profile.route} route via the "
+            f"'{profile.parameter}' parameter."
+            for profile in profiles_for(record.variation.vulnerabilities)
+        ]
+
     def _snapshot(self, record: _LabRecord) -> LabSnapshot:
         show_url = record.phase == "published" and record.publication is not None
         publication = record.publication if show_url else None
@@ -630,6 +778,16 @@ class LabManager:
                 publication.public_access_warning if publication is not None else None
             ),
             error_code=record.error_code,
+            sandbox_name=record.sandbox_name,
+            model=record.model,
+            boot_to_ready_s=record.boot_to_ready_s,
+            egress_status=record.egress_status,
+            llm_fallback_used=record.llm_fallback_used,
+            local_preview=record.local_preview,
+            solved=record.solved,
+            flag_submissions=record.flag_submissions,
+            steps=[dict(step) for step in record.steps],
+            hints=self._hints(record) if record.phase == "published" else [],
         )
 
 
