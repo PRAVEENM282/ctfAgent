@@ -10,3 +10,5 @@ ui/vite.config.d.ts
 node_modules/
 docs/
 .vulnforge-state/
+
+celesto_guests.json

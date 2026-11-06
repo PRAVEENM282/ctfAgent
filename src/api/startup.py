@@ -15,7 +15,7 @@ async def launch_startup_action() -> None:
     if action not in {"demo", "eval"}:
         raise RuntimeError("VULNFORGE_STARTUP_ACTION must be none, demo, or eval")
     root = Path(__file__).resolve().parents[2]
-    command = [sys.executable, "scripts/run_m6.py"] if action == "demo" else [sys.executable, "scripts/run_evaluation.py", "--attempts", "20", "--execute"]
+    command = [sys.executable, "scripts/run_m6.py"] if action == "demo" else [sys.executable, "scripts/run_eval.py", "--runs", "20"]
     log_path = Path(os.getenv("VULNFORGE_STATE_DIR", "/var/lib/vulnforge")) / f"startup-{action}.log"
     log_path.parent.mkdir(parents=True, exist_ok=True)
     handle = log_path.open("ab", buffering=0)
