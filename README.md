@@ -1,6 +1,6 @@
 # VulnForge
 
-**Live dashboard:** `http://127.0.0.1:8080/` (served by the API after `docker compose up --build`). VulnForge is operated through this dashboard; the vulnerable labs it generates are short-lived and ephemeral, so there is no permanent public lab URL — each lab is published only after private verification and torn down on cleanup.
+**Live dashboard:** `http://127.0.0.1:3000/` (the `web` nginx service after `docker compose up --build`; it proxies the API at `:8080`). VulnForge is operated through this dashboard; the vulnerable labs it generates are short-lived and ephemeral, so there is no permanent public lab URL — each lab is published only after private verification and torn down on cleanup.
 
 VulnForge is a small, auditable CTF-lab generator. An LLM agent builds an intentionally vulnerable web app (SQL injection, reflected XSS, path traversal, IDOR, or a bundle) **inside a Celesto sandbox**, verifies the exploit privately from inside the guest, publishes one port so students can attack it, then deletes the guest and revokes the route. Generated code never runs on the host.
 
@@ -109,11 +109,11 @@ ollama pull qwen2.5-coder:1.5b
 ### 3a. Cloud mode (Docker)
 
 ```bash
-docker compose up --build -d --wait   # api + ledger become healthy
-# open http://127.0.0.1:8080/
+docker compose up --build -d --wait   # ledger + api + web become healthy
+# open http://127.0.0.1:3000/   (dashboard; API is at http://127.0.0.1:8080/)
 ```
 
-Compose starts only `api` and `ledger`; microVMs are created by the API through Celesto, never as a Compose service. Compose becomes healthy with placeholder credentials.
+Three services: `ledger` (Postgres), `api` (FastAPI backend), and `web` (nginx serving the dashboard and proxying `/api`, `/health`, `/reports` to the backend). MicroVMs are created by the API through Celesto, never as a Compose service. Compose becomes healthy with placeholder credentials.
 
 ### 3b. Local mode (host API + QEMU)
 
@@ -121,12 +121,15 @@ Local guests need host KVM, so run the API on the host:
 
 ```bash
 celesto image pull ubuntu                 # once (also: --vmm qemu)
-docker compose up -d ledger               # Postgres only
+npm ci --prefix ui && npm run build --prefix ui   # once: build the dashboard
+docker compose up -d ledger               # Postgres only (published on 127.0.0.1:5432)
 export CELESTO_PROVIDER=local LLM_PROVIDER=ollama LLM_MODEL=qwen2.5-coder:1.5b \
        OLLAMA_BASE_URL=http://localhost:11434 \
        DATABASE_URL=postgresql://ledger:ledger@127.0.0.1:5432/ledger
-uvicorn src.api.main:app --host 127.0.0.1 --port 8080
+uvicorn src.api.main:app --host 127.0.0.1 --port 8080   # dashboard + API at :8080
 ```
+
+In local mode the host-run API serves the dashboard itself from `ui/dist`, so the separate `web` container is not needed.
 
 ### 4. Checks
 

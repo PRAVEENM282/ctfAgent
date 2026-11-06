@@ -86,6 +86,22 @@ services:
       retries: 10
       start_period: 5s
 
+  web:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:${WEB_PORT:-3000}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null 2>&1 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
 volumes:
   ledger-data:
   vulnforge-state:

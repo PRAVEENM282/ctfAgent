@@ -1,11 +1,3 @@
-FROM node:22-bookworm-slim AS frontend-build
-
-WORKDIR /app
-COPY ui/package.json ui/package-lock.json ./ui/
-RUN npm ci --prefix ui
-COPY ui ./ui
-RUN npm run build --prefix ui
-
 FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -31,7 +23,9 @@ COPY --chown=vulnforge:vulnforge logs ./logs
 COPY --chown=vulnforge:vulnforge seeds ./seeds
 COPY --chown=vulnforge:vulnforge Dockerfile ./Dockerfile
 COPY --chown=vulnforge:vulnforge docker-compose.yml ./docker-compose.yml
-COPY --from=frontend-build --chown=vulnforge:vulnforge /app/ui/dist ./ui/dist
+
+# The dashboard is served by the separate `web` (nginx) service — see ui/Dockerfile.
+# The API is backend-only here; its "/" returns a small placeholder if hit directly.
 
 USER vulnforge
 EXPOSE 8080
