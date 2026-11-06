@@ -146,6 +146,9 @@ async def main_async(runs: int, sleep_s: float) -> int:
     finally:
         await manager.close()
 
+    # The report rows are sorted ascending by wall-clock (the validator requires
+    # this and percentiles are computed on the ascending order).
+    rows.sort(key=lambda r: r["wall_clock_s"])
     wall = [r["wall_clock_s"] for r in rows]
     boot = [r["boot_to_ready_s"] for r in rows]
     successes = sum(1 for r in rows if r["success"])
