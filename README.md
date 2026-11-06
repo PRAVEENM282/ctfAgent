@@ -71,12 +71,14 @@ Local mode does not fake a public URL; it clearly labels the lab a **local previ
 `scripts/run_eval.py` runs N (default 20) sequential **fresh** labs end to end through the exact dashboard pipeline, sleeping between runs to avoid rate limits, recording per run: `sandbox_name`, `fresh`, `success`, `wall_clock_s`, `boot_to_ready_s`, and `cost_usd` (hourly rate × guest lifetime; Micro = $0.015/hr, local = $0). It computes `success_rate`, median and p90 (ascending sort; median of the two middle rows; p90 = ⌈0.9·N⌉-th), `total_cost_usd`, and writes `reports/reliability.json` plus a postmortem in `reports/postmortem.md`. Failed rows are never dropped.
 
 ```bash
+# Local (reliable, $0, no trial limits):
+CELESTO_PROVIDER=local python scripts/run_eval.py --runs 20 --sleep 5
 # Cloud (needs CELESTO_API_KEY and a reachable Ollama on the control plane):
-python scripts/run_eval.py --runs 20 --sleep 15
+CELESTO_PROVIDER=cloud python scripts/run_eval.py --runs 20 --sleep 15
 python scripts/validate_reports.py
 ```
 
-`reports/reliability.json` contains only rows produced by real runs of this pipeline.
+`reports/reliability.json` contains only rows produced by real runs of this pipeline; failed rows are kept, never dropped. The canonical report is the **local** 20-run batch (representative of the app, $0). The **cloud** batch is preserved at `reports/evidence/cloud_reliability_eval.json`: nine fresh guests completed the full create→verify→publish→delete lifecycle in ~44 s each before the free Celesto Cloud trial throttled further guest creation (fast ~6 s create failures). The binding constraint was the trial's sandbox quota, not cost — the whole cloud batch spent under $0.002.
 
 ## Containment test
 

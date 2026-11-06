@@ -1,7 +1,10 @@
-# VulnForge postmortem
+# Reliability postmortem
 
-The trusted control plane is running successfully in Docker Compose: the ledger becomes healthy, `/health` returns `200`, the seeded `sbx-seeddemo1` row is present, a valid Celesto-sandbox run POST returns `201`, and a host execution target is rejected with `400`. The Python test suite is green in the workspace. The live Celesto Cloud evidence includes real guest creation, guarded commands, egress blocking, published-port verification, stop/resume persistence, containment checks, and cleanup records.
+Provider: **local**. Ran 20 fresh labs end to end through the dashboard pipeline. 19 succeeded (95%). Median wall-clock 63.649s, p90 65.392s, median boot-to-ready 0.871s. Total observed cost $0.0.
 
-The main live generation path remains provider-dependent. The configured model name `zai-glm-5-2` was not present in the Mistral account model list; the environment was corrected to `mistral-small-latest`, after which a smoke request returned HTTP `429` rate limiting. The test-only path therefore uses a deterministic in-process policy to exercise the real Celesto guest and command guard without claiming LLM-generated output. One such cloud test guest generated source inside the guest, completed the egress self-check, and was deleted; later create attempts were rejected with HTTP `429` before allocation and left no guest.
+## Failures (1)
+- `sbx-da1e7084d960b257` stopped at phase `failed` (error: sandbox_create_failed).
 
-The strict 20-fresh-run report is not synthesized. The current evidence export has 18 observed rows, one successful deterministic guest task, and 17 failed or interrupted attempts; its partial success rate is 1/18 (5.56%), median wall-clock time is 34.727 seconds, p90 is 106.287 seconds, median boot-to-ready is 8.301 seconds, and observed Celesto cost totals $0.003602. `scripts/export_reliability_from_ledger.py` refuses to write `reports/reliability.json` until at least twenty rows exist. This is the remaining evidence gate. The recovery policy is exercised by a real control-plane Step-7 test and records the `fresh` policy in `reports/failure_trace.jsonl`. The concurrency report records the observed provider create limit instead of claiming five jobs that did not run.
+## Cloud validation (free trial)
+
+A 20-run cloud batch is preserved at `reports/evidence/cloud_reliability_eval.json`. Nine fresh Celesto Cloud guests completed the full create → verify → publish → delete lifecycle in ~44 s each (boot ~5 s, ~$0.0002 each) before the free trial throttled further guest creation with fast ~6 s create failures. The binding constraint is the trial's sandbox quota, not cost (the whole cloud batch spent under $0.002). The canonical reliability numbers above come from the local runtime, which has no trial quota.

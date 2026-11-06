@@ -1,0 +1,233 @@
+{
+  "generated_at": "2026-11-06T15:43:56.592038Z",
+  "provider": "cloud",
+  "run_count": 20,
+  "success_rate": 0.45,
+  "median_wall_clock_s": 6.08,
+  "p90_wall_clock_s": 45.482,
+  "median_boot_to_ready_s": 0.0,
+  "total_cost_usd": 0.001956,
+  "postmortem_path": "reports/postmortem.md",
+  "runs": [
+    {
+      "run_id": "run-02ebef88304c",
+      "sandbox_name": "sbx-fb8603f6365b2363",
+      "fresh": true,
+      "success": true,
+      "wall_clock_s": 46.788,
+      "boot_to_ready_s": 4.333,
+      "cost_usd": 0.000195,
+      "error_code": null,
+      "phase": "awaiting_publication"
+    },
+    {
+      "run_id": "run-87b1b9d46d21",
+      "sandbox_name": "sbx-9df14ced59fba0ad",
+      "fresh": true,
+      "success": true,
+      "wall_clock_s": 54.337,
+      "boot_to_ready_s": 7.446,
+      "cost_usd": 0.000226,
+      "error_code": null,
+      "phase": "awaiting_publication"
+    },
+    {
+      "run_id": "run-97d3a2f11f5b",
+      "sandbox_name": "sbx-22250ec811adea30",
+      "fresh": true,
+      "success": true,
+      "wall_clock_s": 43.82,
+      "boot_to_ready_s": 4.53,
+      "cost_usd": 0.000183,
+      "error_code": null,
+      "phase": "awaiting_publication"
+    },
+    {
+      "run_id": "run-1df67db43595",
+      "sandbox_name": "sbx-bf6c07246cc7419f",
+      "fresh": true,
+      "success": true,
+      "wall_clock_s": 43.104,
+      "boot_to_ready_s": 4.884,
+      "cost_usd": 0.00018,
+      "error_code": null,
+      "phase": "awaiting_publication"
+    },
+    {
+      "run_id": "run-d17d8591b695",
+      "sandbox_name": "sbx-0386aab74ecdd8c5",
+      "fresh": true,
+      "success": true,
+      "wall_clock_s": 42.923,
+      "boot_to_ready_s": 4.105,
+      "cost_usd": 0.000179,
+      "error_code": null,
+      "phase": "awaiting_publication"
+    },
+    {
+      "run_id": "run-182c29d4f8e9",
+      "sandbox_name": "sbx-64fb7c62108aa94a",
+      "fresh": true,
+      "success": true,
+      "wall_clock_s": 42.544,
+      "boot_to_ready_s": 4.525,
+      "cost_usd": 0.000177,
+      "error_code": null,
+      "phase": "awaiting_publication"
+    },
+    {
+      "run_id": "run-a14405cb6941",
+      "sandbox_name": "sbx-a02540f57bc7b674",
+      "fresh": true,
+      "success": true,
+      "wall_clock_s": 43.796,
+      "boot_to_ready_s": 4.189,
+      "cost_usd": 0.000182,
+      "error_code": null,
+      "phase": "awaiting_publication"
+    },
+    {
+      "run_id": "run-c9e8a13f321e",
+      "sandbox_name": "sbx-0c19d749729ae4d8",
+      "fresh": true,
+      "success": true,
+      "wall_clock_s": 42.493,
+      "boot_to_ready_s": 4.757,
+      "cost_usd": 0.000177,
+      "error_code": null,
+      "phase": "awaiting_publication"
+    },
+    {
+      "run_id": "run-07853d5494d1",
+      "sandbox_name": "sbx-ee02b83c3e1b1604",
+      "fresh": true,
+      "success": true,
+      "wall_clock_s": 45.482,
+      "boot_to_ready_s": 4.959,
+      "cost_usd": 0.00019,
+      "error_code": null,
+      "phase": "awaiting_publication"
+    },
+    {
+      "run_id": "run-f1ca15657b2d",
+      "sandbox_name": "sbx-a15ab275e47fcc35",
+      "fresh": true,
+      "success": false,
+      "wall_clock_s": 6.059,
+      "boot_to_ready_s": 0.0,
+      "cost_usd": 2.5e-05,
+      "error_code": "lab_execution_failed",
+      "phase": "failed"
+    },
+    {
+      "run_id": "run-f14785b7f2b6",
+      "sandbox_name": "sbx-7cc05c16969a88d0",
+      "fresh": true,
+      "success": false,
+      "wall_clock_s": 6.058,
+      "boot_to_ready_s": 0.0,
+      "cost_usd": 2.5e-05,
+      "error_code": "lab_execution_failed",
+      "phase": "failed"
+    },
+    {
+      "run_id": "run-dfa145359bac",
+      "sandbox_name": "sbx-642c4bd73f816dee",
+      "fresh": true,
+      "success": false,
+      "wall_clock_s": 6.036,
+      "boot_to_ready_s": 0.0,
+      "cost_usd": 2.5e-05,
+      "error_code": "lab_execution_failed",
+      "phase": "failed"
+    },
+    {
+      "run_id": "run-c36f1b0b430d",
+      "sandbox_name": "sbx-63d2c344e8d9a1c1",
+      "fresh": true,
+      "success": false,
+      "wall_clock_s": 6.073,
+      "boot_to_ready_s": 0.0,
+      "cost_usd": 2.5e-05,
+      "error_code": "lab_execution_failed",
+      "phase": "failed"
+    },
+    {
+      "run_id": "run-759b9508881b",
+      "sandbox_name": "sbx-f74801c5b01537ee",
+      "fresh": true,
+      "success": false,
+      "wall_clock_s": 4.056,
+      "boot_to_ready_s": 0.0,
+      "cost_usd": 1.7e-05,
+      "error_code": "lab_execution_failed",
+      "phase": "failed"
+    },
+    {
+      "run_id": "run-5dd637d723ec",
+      "sandbox_name": "sbx-745112506273842e",
+      "fresh": true,
+      "success": false,
+      "wall_clock_s": 6.082,
+      "boot_to_ready_s": 0.0,
+      "cost_usd": 2.5e-05,
+      "error_code": "lab_execution_failed",
+      "phase": "failed"
+    },
+    {
+      "run_id": "run-baceff4c8752",
+      "sandbox_name": "sbx-b7145e30067947b3",
+      "fresh": true,
+      "success": false,
+      "wall_clock_s": 6.026,
+      "boot_to_ready_s": 0.0,
+      "cost_usd": 2.5e-05,
+      "error_code": "lab_execution_failed",
+      "phase": "failed"
+    },
+    {
+      "run_id": "run-4ae93df7728c",
+      "sandbox_name": "sbx-45f731cbbd3e85f6",
+      "fresh": true,
+      "success": false,
+      "wall_clock_s": 6.03,
+      "boot_to_ready_s": 0.0,
+      "cost_usd": 2.5e-05,
+      "error_code": "lab_execution_failed",
+      "phase": "failed"
+    },
+    {
+      "run_id": "run-ec341a234f43",
+      "sandbox_name": "sbx-5a6e8c9ac3bf5c2d",
+      "fresh": true,
+      "success": false,
+      "wall_clock_s": 6.05,
+      "boot_to_ready_s": 0.0,
+      "cost_usd": 2.5e-05,
+      "error_code": "lab_execution_failed",
+      "phase": "failed"
+    },
+    {
+      "run_id": "run-9373f8f970c4",
+      "sandbox_name": "sbx-387436673eee2deb",
+      "fresh": true,
+      "success": false,
+      "wall_clock_s": 6.058,
+      "boot_to_ready_s": 0.0,
+      "cost_usd": 2.5e-05,
+      "error_code": "lab_execution_failed",
+      "phase": "failed"
+    },
+    {
+      "run_id": "run-baee1f103d05",
+      "sandbox_name": "sbx-3e6a3e55ebe7dbb5",
+      "fresh": true,
+      "success": false,
+      "wall_clock_s": 6.079,
+      "boot_to_ready_s": 0.0,
+      "cost_usd": 2.5e-05,
+      "error_code": "lab_execution_failed",
+      "phase": "failed"
+    }
+  ]
+}
