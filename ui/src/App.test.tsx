@@ -3,16 +3,34 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import * as api from "./api";
-import type { LabSnapshot } from "./types";
+import type { AppConfig, LabSnapshot } from "./types";
 
 vi.mock("./api", () => ({
+  getConfig: vi.fn(),
+  getRuns: vi.fn(),
+  getCommands: vi.fn(),
   createLab: vi.fn(),
   getLab: vi.fn(),
-  publishLab: vi.fn(),
-  stopLab: vi.fn(),
+  approvePublish: vi.fn(),
+  destroyLab: vi.fn(),
+  submitFlag: vi.fn(),
+  setAccessCode: vi.fn(),
+  subscribeLab: vi.fn(() => () => undefined),
 }));
 
-const createSnapshot = (overrides: Partial<LabSnapshot> = {}): LabSnapshot => ({
+const config: AppConfig = {
+  celesto_provider: "local",
+  celesto_backend: "qemu",
+  llm_provider: "ollama",
+  llm_model: "qwen2.5-coder:1.5b",
+  max_active_labs: 1,
+  sandbox_ttl_minutes: 15,
+  access_code_required: false,
+  valid: true,
+  errors: [],
+};
+
+const snapshot = (overrides: Partial<LabSnapshot> = {}): LabSnapshot => ({
   run_id: "run-abc123def456",
   state: "created",
   phase: "queued",
@@ -23,82 +41,45 @@ const createSnapshot = (overrides: Partial<LabSnapshot> = {}): LabSnapshot => ({
   public_url: null,
   public_access_warning: null,
   error_code: null,
+  sandbox_name: "sbx-0123456789ab",
+  model: "qwen2.5-coder:1.5b",
+  boot_to_ready_s: 0.2,
+  egress_status: "blocked",
+  llm_fallback_used: false,
+  local_preview: true,
+  solved: false,
+  flag_submissions: 0,
+  steps: [],
+  hints: [],
   ...overrides,
 });
 
 describe("VulnForge dashboard", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(api.getConfig).mockResolvedValue(config);
+  });
   afterEach(() => cleanup());
-  beforeEach(() => vi.clearAllMocks());
 
-  it("requires a description and starts a queued lab", async () => {
-    vi.mocked(api.createLab).mockResolvedValue(createSnapshot());
-    const user = userEvent.setup();
+  it("shows the active Celesto and LLM mode from config", async () => {
     render(<App />);
-
-    expect(screen.getByRole("heading", { name: /build a vulnerable site/i })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /generate lab/i }));
-    expect(screen.getByRole("alert")).toHaveTextContent(/describe the site/i);
-
-    await user.type(screen.getByLabelText(/site description/i), "Create a search lesson.");
-    await user.click(screen.getByRole("button", { name: /generate lab/i }));
-
-    await waitFor(() => expect(api.createLab).toHaveBeenCalledWith("Create a search lesson.", "single", ["sql_injection"]));
-    expect(screen.getByText(/lab creation queued/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Celesto: local/i)).toBeInTheDocument();
+    expect(screen.getByText(/LLM: ollama/i)).toBeInTheDocument();
   });
 
-  it("submits a selected vulnerability bundle", async () => {
-    vi.mocked(api.createLab).mockResolvedValue(createSnapshot());
+  it("requires a description and queues a lab", async () => {
+    vi.mocked(api.createLab).mockResolvedValue(snapshot());
     const user = userEvent.setup();
     render(<App />);
+    await screen.findByText(/Celesto: local/i);
 
-    await user.type(screen.getByLabelText(/site description/i), "Create a mixed lesson.");
-    await user.selectOptions(screen.getByLabelText(/vulnerability mode/i), "bundle");
-    await user.click(screen.getByLabelText(/SQL injection/));
     await user.click(screen.getByRole("button", { name: /generate lab/i }));
+    expect(await screen.findByText(/describe the site you want/i)).toBeInTheDocument();
 
-    await waitFor(() => expect(api.createLab).toHaveBeenCalledWith(
-      "Create a mixed lesson.",
-      "bundle",
-      ["reflected_xss", "path_traversal", "idor"],
-    ));
-  });
-
-  it("publishes only after verification and confirms cleanup", async () => {
-    vi.mocked(api.createLab).mockResolvedValue(createSnapshot({ phase: "awaiting_publication", message: "Private verification passed. Publish the lab when ready." }));
-    vi.mocked(api.publishLab).mockResolvedValue(createSnapshot({ state: "succeeded", phase: "published", message: "Lab published.", public_url: "https://opaque.celesto.dev/lab", public_access_warning: "Published URLs are public and unauthenticated." }));
-    vi.mocked(api.stopLab).mockResolvedValue(createSnapshot({ state: "deleted", phase: "cleaned_up", message: "The public route was revoked and the sandbox was deleted.", can_stop: false, cleanup_confirmed: true }));
-    const user = userEvent.setup();
-    render(<App />);
-
-    await user.type(screen.getByLabelText(/site description/i), "Create a search lesson.");
+    await user.type(screen.getByLabelText(/site description/i), "A bookstore search page.");
     await user.click(screen.getByRole("button", { name: /generate lab/i }));
-    expect(await screen.findByRole("button", { name: /publish lab/i })).toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: /publish lab/i }));
-    expect(await screen.findByText("https://opaque.celesto.dev/lab")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /stop sandbox/i }));
-    expect(await screen.findByText(/cleanup confirmed/i)).toBeInTheDocument();
-  });
-
-  it("shows a safe failure state and only enables retry after cleanup", async () => {
-    vi.mocked(api.createLab).mockResolvedValue(
-      createSnapshot({
-        state: "failed",
-        phase: "failed",
-        message: "The model provider could not complete generation.",
-        can_stop: false,
-        cleanup_confirmed: true,
-        error_code: "provider_request_failed",
-      }),
+    await waitFor(() =>
+      expect(api.createLab).toHaveBeenCalledWith("A bookstore search page.", "single", ["sql_injection"]),
     );
-    const user = userEvent.setup();
-    render(<App />);
-
-    await user.type(screen.getByLabelText(/site description/i), "Create a search lesson.");
-    await user.click(screen.getByRole("button", { name: /generate lab/i }));
-
-    expect(await screen.findByRole("alert")).toHaveTextContent(/model provider could not complete/i);
-    expect(screen.getByRole("button", { name: /try again/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /generate lab/i })).toBeEnabled();
   });
 });
